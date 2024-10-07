@@ -10,7 +10,7 @@ def camerastream():
 		k = cv2.waitKey(1)
 		if k != -1:
 			break
-	cv2.imwrite('/home/pi/testimage.jpg', image)
+	#cv2.imwrite('/home/pi/testimage.jpg', image)
 	cam.release()
 	cv2.destroyAllWindows()
 	
