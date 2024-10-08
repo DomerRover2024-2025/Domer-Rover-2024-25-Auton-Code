@@ -1,24 +1,27 @@
 import zmq
 import cv2
 import pickle
-import base64
 import numpy as np
 
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
-socket.bind("tcp://*:12346")
+socket.connect("tcp://127.0.0.1:12346")
 #socket.setsockopt_string(zmq.SUBSCRIBE, unicode(''))
-
-print("waiting on receiving info...")
-
+socket.subscribe("")
+print("connection established")
+#message = []
+#index = 0
 while True:
+    #message.append(socket.recv())
     message = socket.recv()
-    print("message received!")
-    image = np.frombuffer(message, dtype=uint8)
+    if not message:
+        break
+    #print("message received!")
+    #print(message)
+    image = np.frombuffer(message, dtype=np.uint8)
     frame = cv2.imdecode(image, 1)
     cv2.imshow('frame',frame)
     cv2.waitKey(1)
-
 
     # except KeyboardInterrupt:
     #     cv2.destroyAllWindows()
