@@ -1,6 +1,5 @@
 import cv2
 import zmq
-import pickle
 import time
 
 context = zmq.Context()
@@ -8,9 +7,12 @@ socket = context.socket(zmq.PUB)
 
 cap = cv2.VideoCapture(0)
 
+HOST = "*"
+PORT = 12346
+
 print("Looking for server...")
 
-socket.bind("tcp://*:12346")
+socket.bind(f"tcp://{HOST}:{PORT}")
 print("waiting to send info")
 
 #socket.send(b"WHY WONT YOU WORK")
@@ -25,17 +27,6 @@ while True:
     #message = buffer.tobytes()
         socket.send(buffer)
     time.sleep(1)
-    #cv2.imshow('frame', frame)
-    #cv2.waitKey(1)
-    #received_message = socket.recv()
-    #received_message = clereceived_message.decode()
-    #print("Received {0} from server".format(received_message))
-    # except KeyboardInterrupt:
-    #     cap.release()
-    #     cv2.destroyAllWindows()
-    #     socket.close()
-    #     print("\nkeyboard interruption\n")
-    # #break
 cap.release()
 cv2.destroyAllWindows()
 socket.close()
