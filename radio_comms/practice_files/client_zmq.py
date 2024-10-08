@@ -10,7 +10,7 @@ cap = cv2.VideoCapture(0)
 
 print("Looking for server...")
 
-socket.bind("tcp://127.0.0.1:12346")
+socket.bind("tcp://*:12346")
 print("waiting to send info")
 
 #socket.send(b"WHY WONT YOU WORK")
