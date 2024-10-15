@@ -4,7 +4,7 @@ HOST = '*'
 PORT = 5555
 
 context = zmq.Context()
-socket = context.socket(zmq.PUB)
+socket = context.socket(zmq.REQ)
 
 socket.bind(f"tcp://{HOST}:{PORT}")
 
