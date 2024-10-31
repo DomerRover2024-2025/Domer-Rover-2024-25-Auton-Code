@@ -20,5 +20,7 @@ To save changes:
 1. Save all your work and exit/turn off the container
 2. Type docker commit <container_id> ghcr.io/username/image:latest. This will create a new image with your changes
 3. Login to the Docker Registry through the same methodology above
-4. Type docker push ghcr.io/username/image:latest
-5. [Optional] Make a commit with the changes to the Dockerfile and push the Dockerfile to the repo using Git
+4. Type docker commit <name>
+5. Type docker tag <name>  ghcr.io/username/image:latest 
+6. Type docker push ghcr.io/username/image:latest
+7. [Optional] Make a commit with the changes to the Dockerfile and push the Dockerfile to the repo using Git
