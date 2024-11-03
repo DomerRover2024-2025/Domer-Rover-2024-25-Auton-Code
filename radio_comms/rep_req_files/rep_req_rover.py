@@ -10,7 +10,6 @@ CONN_STR = f"tcp://{HOST}:{PORT}"
 context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.connect(CONN_STR)
-socket.subscribe("")
 
 while True:
     message = socket.recv_string()
