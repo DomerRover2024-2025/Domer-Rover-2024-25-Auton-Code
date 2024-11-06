@@ -21,11 +21,11 @@ while (True):
     print(str(bytes))
     b_output = ser.read(MAXBYTES)
 
-    
-    image = np.frombuffer(b_output, dtype=np.uint8)
-    frame = cv2.imdecode(image, 1)
-    cv2.imshow('frame', frame)
-    cv2.waitKey(100)
+    if b_output == b'':
+        image = np.frombuffer(b_output, dtype=np.uint8)
+        frame = cv2.imdecode(image, 1)
+        cv2.imshow('frame', frame)
+        cv2.waitKey(100)
     #print(b_output)
 
 
