@@ -2,33 +2,33 @@ import serial
 import numpy as np
 import cv2
 import time
+import struct
 
-
-port = "COM4"
+port = "/dev/cu.usbserial-BG00HO5R"
+#port = "COM4"
 baud = 57600
 timeout = 15
 ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
-# ser.timeout = 2
-# ser.flushInput()
-# ser.flushOutput()
-#while(True):
-    #time.sleep(1)
-    #output = ser.readline()
-    #print((output.decode("utf-8")))
+
 MAXBYTES = 50_000
 while (True):
-    bytes = ser.in_waiting
-    print(str(bytes))
-    b_output = ser.read(MAXBYTES)
+    request = input("Type (p) for photo: ")
+    request = request[0]
+    ser.write(struct.pack("B", request))
 
-    if b_output != b'':
-        image = np.frombuffer(b_output, dtype=np.uint8)
-        frame = cv2.imdecode(image, 1)
-        cv2.imshow('frame', frame)
-        cv2.waitKey(100)
-    else:
-        print("No photo received. Receiving...")
-    #print(b_output)
+    if request == 'p':
+        gotimage = False
+        while not gotimage:
+            b_output = ser.read(MAXBYTES)
+
+            if b_output != b'':
+                image = np.frombuffer(b_output, dtype=np.uint8)
+                frame = cv2.imdecode(image, 1)
+                cv2.imshow('frame', frame)
+                cv2.waitKey(10)
+                gotimage = True
+            else:
+                print("No photo received. Receiving...")
 
 ser.close()
 
