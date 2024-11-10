@@ -4,8 +4,8 @@ import cv2
 import time
 import struct
 
-port = "/dev/cu.usbserial-BG00HO5R"
-#port = "COM4"
+#port = "/dev/cu.usbserial-BG00HO5R"
+port = "COM4"
 baud = 57600
 timeout = 15
 ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
