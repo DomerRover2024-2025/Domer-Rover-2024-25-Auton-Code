@@ -22,10 +22,11 @@ while (True):
             b_output = ser.read(MAXBYTES)
 
             if b_output != b'':
+                print("received image")
                 image = np.frombuffer(b_output, dtype=np.uint8)
                 frame = cv2.imdecode(image, 1)
                 cv2.imshow('frame', frame)
-                cv2.waitKey(10)
+                cv2.waitKey(100)
                 gotimage = True
             else:
                 print("No photo received. Receiving...")
