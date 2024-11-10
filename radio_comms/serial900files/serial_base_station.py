@@ -12,11 +12,11 @@ ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
 
 MAXBYTES = 50_000
 while (True):
-    request = input("Type (p) for photo: ")
-    request = request[0]
+    request = input("Type (1) for photo: ")
+    request = int(request)
     ser.write(struct.pack("B", request))
 
-    if request == 'p':
+    if request == 1:
         gotimage = False
         while not gotimage:
             b_output = ser.read(MAXBYTES)
