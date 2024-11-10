@@ -2,7 +2,8 @@ import serial
 import cv2
 import sys
 
-port = "/dev/cu.usbserial-BG00HO5R"
+#port = "/dev/cu.usbserial-BG00HO5R"
+port = "cu.usbserial-B001VC58"
 baud = 57600
 timeout = 3
 ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
