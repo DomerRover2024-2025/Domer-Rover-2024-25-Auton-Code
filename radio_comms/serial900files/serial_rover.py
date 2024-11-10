@@ -16,6 +16,7 @@ while True:
         request = struct.unpack("B", request)
 
         if request[0] == 1:
+            print("Request for image received.")
             cap = cv2.VideoCapture(0)
             ret, frame = cap.read()
             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 10]
