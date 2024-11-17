@@ -18,7 +18,8 @@ reading = False
 
 while True:
     if not reading:
-        ser.write(bytes(f"{os.path.expanduser("~")} % "))
+        #print(f"{os.getcwd()} % \n")
+        ser.write(f"{os.getcwd()} % \n".encode())
         reading = True
     request = ser.readline()
     if request != b'':

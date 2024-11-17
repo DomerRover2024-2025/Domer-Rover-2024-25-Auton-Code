@@ -1,5 +1,4 @@
-# This is the client side of a client-server model.
-# This will be sending requests to the rover.
+# This is the "one performing the ssh-ing"
 
 import serial
 
