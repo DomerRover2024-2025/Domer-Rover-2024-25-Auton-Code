@@ -65,5 +65,26 @@ while (True):
             print("Image received and shown.")
             cv2.waitKey(10)
             break
+
+    # interactive, controller mode
+    if request == 2:
+        print("Entering interactive mode. Connecting to controller...")
+        # send controller connected
+        controller_connected = True
+        ser.write(struct.pack("=B", controller_connected))
+        if not controller_connected:
+            print("Controller not responding. Exiting interactive mode, sending update.")
+            continue
+
+        print("Controller responded.")
+
+        while True:
+            current_control = input("Enter int to represent control input: ")
+            ser.write(struct.pack("=B", int(current_control)))
+            if int(current_control) == 0:
+                break
+            print("Quitting interactive mode.")
+            
+
 ser.close()
 cv2.destroyAllWindows()
