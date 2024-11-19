@@ -5,7 +5,7 @@ import time
 ###### CONSTANTS ######
 HOST = "*"
 PORT = 12346
-QUALITY = 50
+QUALITY = 10
 TIME_BETWEEN_FRAMES = 0.25
 
 # create publish socket and video capture object
@@ -23,7 +23,7 @@ while True:
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), QUALITY]
         encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
         socket.send(buffer)
-    time.sleep(1)
+    time.sleep(TIME_BETWEEN_FRAMES)
 cap.release()
 cv2.destroyAllWindows()
 socket.close()
