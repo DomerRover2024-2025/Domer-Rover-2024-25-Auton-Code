@@ -8,21 +8,6 @@ import math
 import time
 import Jetson.GPIO as GPIO
 
-#one subprocess for connecting controller,one subprocess for 
-
-arduino = serial.Serial(
-    port='/dev/ttyACM0',
-    baudrate=9600,
-    bytesize=serial.EIGHTBITS,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE,
-    timeout=0,
-    xonxoff=False,
-    rtscts=False,
-    dsrdtr=False,
-    writeTimeout=2
-)
-
 def valueMap(val):
     return int(val * 255)
 
@@ -62,7 +47,7 @@ def calcWheelSpeeds(magnitude, angle):
 
     return left_speed, right_speed
 
-def sendDriveSignals(left, right):
+def sendDriveSignals(left, right, arduino):
     dutyCycleLeft = valueMap(left)
     dutyCycleRight = valueMap(right)
         
@@ -97,104 +82,114 @@ class TextPrint: # not necessary, for ensuring correct input
     def unindent(self):
         self.x -= 10
         
-        
-host = "10.7.4.66" 
-port = 8088
-
-pygame.init()
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((host, port))
-s.listen(2)
-
-conn, addr = s.accept()
-
-screen = pygame.display.set_mode((500, 700))
-pygame.display.set_caption("Joystick example")
-
-clock = pygame.time.Clock()
-text_print = TextPrint()
-triggerMult = 1	# init magnitude scalar
-stopFlag = False
-
-
-try:
-    while True:
-        screen.fill((255, 255, 255))		#not necessary - ensure correct input
-        text_print.reset()					#not necessary - ensure correct input
-        
-        data = conn.recv(4096)
-        if not data:
-            break
-
-        joystick_data = pickle.loads(data)
-
-        a_lt1 =         joystick_data[0]
-        a_rt1 =         joystick_data[1]
-        b_lbumper1 =    joystick_data[2]
-        b_rbumper1 =    joystick_data[3] 
-        a_leftx1 =      joystick_data[4]
-        a_lefty1 =      joystick_data[5]
-        a_rightx1 =     joystick_data[6]
-        a_righty1 =     joystick_data[7]
-        b_leftIn1 =     joystick_data[8]
-        b_rightIn1 =    joystick_data[9]  
-        b_x1 =          joystick_data[10] 
-        b_circle1 =     joystick_data[11] 
-        b_square1 =     joystick_data[12]  
-        b_triangle1 =   joystick_data[13] 
-        b_padUp1 =      joystick_data[14]  
-        b_padDown1 =    joystick_data[15]  
-        b_padLeft1 =    joystick_data[16] 
-        b_padRight1 =   joystick_data[17]
-        
-        mag, angle = cart2pol(a_leftx1, a_lefty1)
-        angleRads = math.radians(angle)
-        
-        triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
-        
-        triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x
-        
-        if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
-            pass
-        if b_padDown1 == 1:
-            pass
-        if b_padLeft1 == 1:
-            pass
-        if b_padRight1 == 1:
-            pass
-        
-
-
-
-
-        left_power, right_power = calcWheelSpeeds(mag, angle)
-        if b_leftIn1 == 1 and stopFlag == False:
-            stopFlag = True
-            
-        if stopFlag == True:
-            left_power, right_power = 0, 0
-        
-        
-        
-        
-        
-        dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
-        
-        if arduino.in_waiting > 0:		# ensure arduino is reading
-            arduino_feedback = arduino.readline().decode().strip()
-            print("Arduino Feedback:", arduino_feedback)
-            text_print.tprint(screen, f"Arduino Feedback: {arduino_feedback}")
-
-        text_print.tprint(screen, f"Duty Cycle: {dutyCycleLeft}")
-        pygame.display.flip()
     
-        clock.tick(20)
+    
+    
+def mainReceiver():
+    arduino = serial.Serial(
+        port='/dev/ttyACM0',
+        baudrate=9600,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        timeout=0,
+        xonxoff=False,
+        rtscts=False,
+        dsrdtr=False,
+        writeTimeout=2)
+    host = "10.7.4.66" 
+    port = 8088
 
-finally:
-    arduino.close()
-    conn.close()
-    s.close()
+    pygame.init()
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((host, port))
+    s.listen(2)
+
+    conn, addr = s.accept()
+
+    screen = pygame.display.set_mode((500, 700))
+    pygame.display.set_caption("Joystick example")
+
+    clock = pygame.time.Clock()
+    text_print = TextPrint()
+    triggerMult = 1	# init magnitude scalar
+    stopFlag = False
+    
+    try:
+        while True:
+            screen.fill((255, 255, 255))		#not necessary - ensure correct input
+            text_print.reset()					#not necessary - ensure correct input
+        
+            data = conn.recv(4096)
+            if not data:
+                break
+
+            joystick_data = pickle.loads(data)
+
+            a_lt1 =         joystick_data[0]
+            a_rt1 =         joystick_data[1]
+            b_lbumper1 =    joystick_data[2]
+            b_rbumper1 =    joystick_data[3] 
+            a_leftx1 =      joystick_data[4]
+            a_lefty1 =      joystick_data[5]
+            a_rightx1 =     joystick_data[6]
+            a_righty1 =     joystick_data[7]
+            b_leftIn1 =     joystick_data[8]
+            b_rightIn1 =    joystick_data[9]  
+            b_x1 =          joystick_data[10] 
+            b_circle1 =     joystick_data[11] 
+            b_square1 =     joystick_data[12]  
+            b_triangle1 =   joystick_data[13] 
+            b_padUp1 =      joystick_data[14]  
+            b_padDown1 =    joystick_data[15]  
+            b_padLeft1 =    joystick_data[16] 
+            b_padRight1 =   joystick_data[17]
+        
+            mag, angle = cart2pol(a_leftx1, a_lefty1)
+            angleRads = math.radians(angle)
+        
+            triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
+        
+            triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x
+        
+            if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
+                pass
+            if b_padDown1 == 1:
+                pass
+            if b_padLeft1 == 1:
+                pass
+            if b_padRight1 == 1:
+                pass
+        
+
+
+
+
+            left_power, right_power = calcWheelSpeeds(mag, angle)
+            if b_leftIn1 == 1 and stopFlag == False:
+                stopFlag = True
+            
+            if stopFlag == True:
+                left_power, right_power = 0, 0
+        
+            dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power, arduino)
+        
+            if arduino.in_waiting > 0:		# ensure arduino is reading
+                arduino_feedback = arduino.readline().decode().strip()
+                print("Arduino Feedback:", arduino_feedback)
+                text_print.tprint(screen, f"Arduino Feedback: {arduino_feedback}")
+
+            text_print.tprint(screen, f"Duty Cycle: {dutyCycleLeft}")
+            pygame.display.flip()
+    
+            clock.tick(20)
+
+    finally:
+        arduino.close()
+        conn.close()
+        s.close()
+    
 
 
 
@@ -208,3 +203,6 @@ finally:
 # 
 # 
 # 
+
+if __name__ == "main":
+    mainReceiver()
