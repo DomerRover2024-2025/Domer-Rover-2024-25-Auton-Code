@@ -11,10 +11,10 @@ ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
 # should receive a heartbeat every second
 try:
     while True:
-        output = ser.read(1)
+        output = ser.readline()
         if output != b'':
-            real_output = struct.unpack("B", output)
-            print(real_output[0])
+            # real_output = struct.unpack("B", output)
+            print(output)
         
         #     print(output, "Heartbeat received.")
         # else:
