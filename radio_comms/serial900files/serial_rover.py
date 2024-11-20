@@ -27,7 +27,7 @@ while True:
     request = ser.read(1)
 
     # if nothing received, ask again
-    if len(request == 0):
+    if len(request) == 0:
         continue
 
     request = struct.unpack("B", request)
@@ -67,20 +67,27 @@ while True:
     
     # interactive mode
     elif request[0] == 2:
-        # # do the control thing
+        # do the controller connection
         print("Receiving status update on controller...")
         while True:
             did_controller_connect = ser.read(1)
             if len(did_controller_connect):
                 break
         did_controller_connect = struct.unpack("=B", did_controller_connect)[0]
+
+        # if the controller connected: receive values
         if did_controller_connect:
             print("Controller connected. Receiving inputs.")
             while True:
                 current_output = ser.read(struct.calcsize("=B"))
                 if not len(current_output):
                     continue
-                print(struct.unpack("=B", current_output))
+
+                curr_value = struct.unpack("=B", current_output)[0]
+                if curr_value == 0:
+                    print("Exiting interactive mode.")
+                    break
+                print(curr_value)
     awaiting_request = True
     request = b''           
 
