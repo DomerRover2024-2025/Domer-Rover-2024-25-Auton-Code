@@ -84,12 +84,22 @@ while (True):
 
         print("Controller responded.")
 
+        print("Enter int to represent control input:")
+
         while True:
-            current_control = input("Enter int to represent control input: ")
+            current_control = input(">> ")
+            try:
+                int_curr_control = int(current_control)
+            except ValueError as v:
+                print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
+            if int(current_control) > 255 or int(current_control) < 0:
+                print("Controls must be between 0 and 255.", file=sys.stderr)
+                continue
             ser.write(struct.pack("=B", int(current_control)))
             if int(current_control) == 0:
                 break
-            print("Quitting interactive mode.")
+            
+        print("Quitting interactive mode.")
             
 
 ser.close()
