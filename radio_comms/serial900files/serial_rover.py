@@ -50,7 +50,7 @@ while True:
         size_of_data = len(buffer)
         size_packed = struct.pack("=L", size_of_data)
 
-        print(size_of_data, sys.getsizeof(buffer))
+        #print(size_of_data, sys.getsizeof(buffer))
         print("Size of image calculating. Sending.")
         ser.write(size_packed)
 

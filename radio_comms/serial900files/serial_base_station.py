@@ -19,9 +19,15 @@ ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
 ser.reset_input_buffer()
 ser.reset_output_buffer()
 
+def print_options():
+    print("(0) to quit")
+    print("(1) for photo")
+    print("(2) for interactive mode")
+
 MAXBYTES = 70_000
 while (True):
-    request = input("Type (1) for photo: ")
+    print_options()
+    request = input(">> ")
     request = int(request)
     ser.write(struct.pack("B", request))
 
@@ -33,7 +39,7 @@ while (True):
             print("Request successful.")
             break
         else:
-            print("Request unsucessful.")
+            print("Request unsuccessful.")
 
     if request == 1: # photo
         gotimage = False
@@ -49,7 +55,7 @@ while (True):
         prev_len = -1
         time.sleep(1)
         while True:
-            b_output += ser.read(4096)
+            b_output += ser.read(50_000)
             
             if len(b_output) < size_of_image:
             #    print(len(b_output))
