@@ -50,7 +50,7 @@ def init():
     return joysticks, text_print, screen
 
 
-def run(joysticks, text_print, screen, client):
+def run(joysticks, text_print, screen, client=None):
     done = False
     while not done:
         for event in pygame.event.get():
@@ -147,10 +147,14 @@ def run(joysticks, text_print, screen, client):
         #send variables over socket
 
         joystick_data = [a_lt1, a_rt1, b_lbumper1, b_rbumper1, a_leftx1, a_lefty1, a_rightx1, a_righty1, b_leftIn1, b_rightIn1, b_x1, b_circle1, b_square1, b_triangle1, b_padUp1, b_padDown1, b_padLeft1, b_padRight1]
-        data_enc = pickle.dumps(joystick_data)
-        # print(data_enc)
-        client.send(data_enc)
-        time.sleep(.1)
+        
+        if client:
+            data_enc = pickle.dumps(joystick_data)
+            # print(data_enc)
+            client.send(data_enc)
+            time.sleep(.1)
+        else:
+            yield joystick_data
 
     client.close()
 
