@@ -7,6 +7,7 @@ import cv2
 import time
 import struct
 import sys
+import joystickDriving
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -77,6 +78,8 @@ while (True):
         print("Entering interactive mode. Connecting to controller...")
         # send controller connected
         controller_connected = True
+        joysticks, text_print, screen = joystickDriving.init()
+
         ser.write(struct.pack("=B", controller_connected))
         if not controller_connected:
             print("Controller not responding. Exiting interactive mode, sending update.")
@@ -86,8 +89,11 @@ while (True):
 
         print("Enter int to represent control input:")
 
+        run = joystickDriving.run(joysticks, text_print, screen)
+
         while True:
-            current_control = input(">> ")
+            #current_control = input(">> ")
+            current_control = next(run)
             try:
                 int_curr_control = int(current_control)
             except ValueError as v:
