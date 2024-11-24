@@ -10,6 +10,8 @@ ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
 try:
     while True:
         ser.write(b"Heartbeat\r\n")
-        time.sleep(2)
+        output = ser.readline()
+        print(output)
+        #time.sleep(2)
 except KeyboardInterrupt:
     ser.close()
