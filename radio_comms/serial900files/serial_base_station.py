@@ -10,7 +10,7 @@ import sys
 import joystickDriving
 import concurrent.futures
 
-np.set_printoptions(threshold=sys.maxsize)
+#p.set_printoptions(threshold=sys.maxsize)
 
 def print_options() -> None:
     print("(0) to quit")
@@ -32,32 +32,54 @@ def save_and_output_image(b_output : bytearray) -> bool:
     
 keep_reading_images = True
 def read_images(ser : serial.Serial):
+    info_file = open("some_info.txt", 'bw')
     while keep_reading_images:
+        sys.stdout.flush()
         size_of_image = ser.read(struct.calcsize("=L"))
         if len(size_of_image) != struct.calcsize("=L"):
+            print("it no work !")
             continue
+        
         size_of_image = struct.unpack("=L", size_of_image)[0]
-            # print("size of image:", size_of_image)
+        info_file.write(str(size_of_image))
+        print(f"size of image: {size_of_image}")
             # print("Size received. Sending acknowledgement.")
             # ser.write(struct.pack("=B", 1))
             # break
         if size_of_image == 0:
-            #print("Image capturing failed. Returning to menu.")
+            print("Image capturing failed. Returning to menu.")
             continue
+
         b_output = b''
-
         prev_output = -1
-
         while len(b_output) < size_of_image or prev_output != len(b_output):
-            b_output += ser.read(10_000)
+            if size_of_image - len(b_output) < 5_000:
+                addition = ser.read(size_of_image - len(b_output))
+            else:
+                addition = ser.read(5_000)
+            b_output += addition
             prev_output = len(b_output)
-        
+            info_file.write(f'.{size_of_image - len(b_output)}.')
+            print(len(b_output))
+
+        info_file.write("captured image\n")
         success = save_and_output_image(b_output=b_output)
+        info_file.write("-------\n")
         #time.sleep(1)
+    info_file.close()
+    #ser.reset_output_buffer()
+
+def flush_whats_coming_in(ser: serial.Serial) -> int:
+    count : int = 0
+    while True:
+        output = ser.read(1)
+        if not len(output): break
+        count += len(output)
+    return count
 
 if __name__ == "__main__":
     #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "COM4"
+    port = "COM3"
     baud = 57600
     timeout = 3
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -70,6 +92,15 @@ if __name__ == "__main__":
         print_options()
         request = input(">> ")
         request = int(request)
+        
+        if request == 10:
+            with open("remaining_content.txt", 'bw') as f:
+                while True:
+                    output = ser.read(1)
+                    if not len(output): break
+                    f.write(output)
+            continue
+        
         ser.write(struct.pack("=B", request))
 
         if request == 0: # end connection
@@ -123,7 +154,7 @@ if __name__ == "__main__":
             print("Enter int to represent control input:")
 
             #run = joystickDriving.run(joysticks, text_print, screen)
-            image_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+            image_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
             keep_reading_images = True
             try:
                 future = image_executor.submit(read_images, ser)
@@ -133,21 +164,30 @@ if __name__ == "__main__":
             while True:
                 current_control = input(">> ")
                 #current_control = next(run)
+                if not len(current_control):
+                    print("Please enter a number.", file=sys.stderr)
+                    continue
                 try:
                     int_curr_control = int(current_control)
                 except ValueError as v:
                     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
+                    continue
                 if int(current_control) > 255 or int(current_control) < 0:
                     print("Controls must be between 0 and 255.", file=sys.stderr)
                     continue
                 ser.write(struct.pack("=B", int(current_control)))
+
+                # on exit:
                 if int(current_control) == 0:
                     keep_reading_images = False
                     print("cancelling future")
                     future.cancel()
                     print("shutting down executor")
                     image_executor.shutdown()
-                    print("breaking loop")
+                    print("outwaiting: ", ser.out_waiting)
+                    print("inwaiting: ", ser.in_waiting)
+                    data_lost = flush_whats_coming_in(ser)
+                    print("data lost: ", data_lost)
                     break
                 #read_images(ser)
 
