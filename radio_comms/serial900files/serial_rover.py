@@ -39,8 +39,8 @@ def send_images(ser: serial.Serial) -> None:
 
 
 if __name__ == "__main__":
-    port = "/dev/cu.usbserial-BG00HO5R"
-    #port = "/dev/cu.usbserial-B001VC58"
+    #port = "/dev/cu.usbserial-BG00HO5R"
+    port = "/dev/cu.usbserial-B001VC58"
     #port = "COM4"
     baud = 57600
     timeout = 3
@@ -112,12 +112,16 @@ if __name__ == "__main__":
                 print("Controller failed to connect. exiting.")
                 continue
 
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+            keep_sending_images = True
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+
             try:
                 future = executor.submit(send_images, ser)
             except:
                 print("Some issue with the executor")
+
             print("Controller connected. Receiving inputs.")
+
             while True:
                 current_output = ser.read(struct.calcsize("=B"))
                 if not len(current_output):
