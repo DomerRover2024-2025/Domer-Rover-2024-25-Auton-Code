@@ -44,14 +44,14 @@ def init():
 
     # clock = pygame.time.Clock()
     # text_print = TextPrint()
-    
-    j = pygame.joystick.Joystick(0)
+    #j = pygame.joystick.Joystick(0)
     joysticks = {}
     #return joysticks, text_print, screen
     return joysticks, None, None
 
 
 def run(joysticks, text_print, screen, client=None):
+    pygame.init()
     done = False
     while not done:
         for event in pygame.event.get():
@@ -166,7 +166,7 @@ def main():
     client = socket.socket()
     client.connect((host, port))
     
-    pygame.init()
+    
     
     joysticks, textprint, screen = init()
     run(joysticks, textprint, screen, client)

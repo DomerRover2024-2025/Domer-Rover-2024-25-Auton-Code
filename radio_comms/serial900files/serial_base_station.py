@@ -166,22 +166,28 @@ if __name__ == "__main__":
 
             while True:
                 #current_control = input(">> ")
-                current_control = next(run)[3]
-                if not len(current_control):
-                    print("Please enter a number.", file=sys.stderr)
-                    continue
-                try:
-                    int_curr_control = int(current_control)
-                except ValueError as v:
-                    print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
-                    continue
-                if int(current_control) > 255 or int(current_control) < 0:
-                    print("Controls must be between 0 and 255.", file=sys.stderr)
-                    continue
-                ser.write(struct.pack("=B", int(current_control)))
+                current_control = next(run)
+                # if not len(current_control):
+                #     print("Please enter a number.", file=sys.stderr)
+                #     continue
+                # try:
+                #     int_curr_control = int(cSurrent_control)
+                # except ValueError as v:
+                #     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
+                #     continue
+                # if int(current_control) > 255 or int(current_control) < 0:
+                #     print("Controls must be between 0 and 255.", file=sys.stderr)
+                #     continue
+                float_controls = current_control[:2]
+                int_controls = current_control[2:]
+                ser.write(struct.pack(">f", float_controls[0]))
+                ser.write(struct.pack(">f", float_controls[1]))
+                ser.write(bytearray(int_controls))
+                #ser.write(struct.pack("=B", int(current_control)))
 
                 # on exit:
-                if int(current_control) == 0:
+                if False:
+                #if int(current_control) == 1_000:
                     keep_reading_images = False
                     print("cancelling future")
                     future.cancel()
