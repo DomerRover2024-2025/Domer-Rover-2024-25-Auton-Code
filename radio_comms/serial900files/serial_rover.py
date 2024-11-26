@@ -7,7 +7,8 @@ import sys
 import struct
 import numpy as np
 import concurrent.futures
-np.set_printoptions(threshold=sys.maxsize)
+import time
+#np.set_printoptions(threshold=sys.maxsize)
 
 # function to capture image
 # returns its size and the bytearray representing the image
@@ -36,6 +37,8 @@ def send_images(ser: serial.Serial) -> None:
         if not size_of_image:
             return
         ser.write(buffer)
+        time.sleep(1)
+        
 
 
 if __name__ == "__main__":
