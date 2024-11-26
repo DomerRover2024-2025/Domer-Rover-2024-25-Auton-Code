@@ -32,22 +32,19 @@ def save_and_output_image(b_output : bytearray) -> bool:
     
 keep_reading_images = True
 def read_images(ser : serial.Serial):
-    info_file = open("some_info.txt", 'bw')
+    #info_file = open("some_info.txt", 'w')
     while keep_reading_images:
-        sys.stdout.flush()
+
         size_of_image = ser.read(struct.calcsize("=L"))
+        #print(size_of_image)
         if len(size_of_image) != struct.calcsize("=L"):
-            print("it no work !")
+            #print("it no work !")
             continue
         
         size_of_image = struct.unpack("=L", size_of_image)[0]
-        info_file.write(str(size_of_image))
-        print(f"size of image: {size_of_image}")
-            # print("Size received. Sending acknowledgement.")
-            # ser.write(struct.pack("=B", 1))
-            # break
+
         if size_of_image == 0:
-            print("Image capturing failed. Returning to menu.")
+            #print("Image capturing failed. Returning to menu.")
             continue
 
         b_output = b''
@@ -59,14 +56,18 @@ def read_images(ser : serial.Serial):
                 addition = ser.read(5_000)
             b_output += addition
             prev_output = len(b_output)
-            info_file.write(f'.{size_of_image - len(b_output)}.')
-            print(len(b_output))
+            #info_file.write(f'.{size_of_image - len(b_output)}.')
+            #print(len(b_output))
 
-        info_file.write("captured image\n")
+        #info_file.write("captured image\n")
         success = save_and_output_image(b_output=b_output)
-        info_file.write("-------\n")
+        #if success:
+            #info_file.write("ok")
+        #else:
+            #info_file.write("no")
+        #info_file.write("-------\n")
         #time.sleep(1)
-    info_file.close()
+    #info_file.close()
     #ser.reset_output_buffer()
 
 def flush_whats_coming_in(ser: serial.Serial) -> int:
@@ -142,7 +143,8 @@ if __name__ == "__main__":
             print("Entering interactive mode. Connecting to controller...")
             # send controller connected
             controller_connected = True
-            #joysticks, text_print, screen = joystickDriving.init()
+            
+            joysticks, text_print, screen = joystickDriving.init()
 
             ser.write(struct.pack("=B", controller_connected))
             if not controller_connected:
@@ -153,7 +155,8 @@ if __name__ == "__main__":
 
             print("Enter int to represent control input:")
 
-            #run = joystickDriving.run(joysticks, text_print, screen)
+            run = joystickDriving.run(joysticks, text_print, screen)
+
             image_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
             keep_reading_images = True
             try:
@@ -162,8 +165,8 @@ if __name__ == "__main__":
                 print("Some issue with executor")
 
             while True:
-                current_control = input(">> ")
-                #current_control = next(run)
+                #current_control = input(">> ")
+                current_control = next(run)[3]
                 if not len(current_control):
                     print("Please enter a number.", file=sys.stderr)
                     continue
