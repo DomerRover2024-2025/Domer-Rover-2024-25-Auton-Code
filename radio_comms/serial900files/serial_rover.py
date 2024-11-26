@@ -126,12 +126,20 @@ if __name__ == "__main__":
             print("Controller connected. Receiving inputs.")
 
             while True:
-                current_output = ser.read(struct.calcsize("=B"))
-                if not len(current_output):
+                #current_output = ser.read(struct.calcsize("=B"))
+                first_float_output = ser.read(struct.calcsize(">f"))
+                if not len(first_float_output):
                     continue
-
-                curr_value = struct.unpack("=B", current_output)[0]
-                if curr_value == 0:
+                second_float_output = ser.read(struct.calcsize(">f"))
+                int_output = ser.read(56)
+                floats = []
+                floats.append(struct.unpack(">f", first_float_output))
+                floats.append(struct.unpack(">f", second_float_output))
+                ints = np.frombuffer(int_output, dtype=np.uint32)
+                curr_value = floats + ints
+                #curr_value = struct.unpack("=B", current_output)[0]
+                if False:
+                #if curr_value == 1_000:
                     print("Exiting interactive mode.")
                     keep_sending_images = False
                     future.cancel()
