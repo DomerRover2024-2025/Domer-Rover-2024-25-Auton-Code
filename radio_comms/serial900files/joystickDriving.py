@@ -49,8 +49,8 @@ def init():
     #return joysticks, text_print, screen
     return joysticks, None, None
 
-
-def run(joysticks, text_print, screen, client=None):
+# removed text_print, screen params bc unused
+def run(joysticks, client=None):
     pygame.init()
     done = False
     while not done:
