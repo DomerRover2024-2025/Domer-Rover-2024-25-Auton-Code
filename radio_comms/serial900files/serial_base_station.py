@@ -21,9 +21,13 @@ import concurrent.futures
 #####################
 
 def print_options() -> None:
+    print("----------------")
+    print("MENU OF CONTROLS")
+    print("----------------")
     print("(0) to quit")
     print("(1) for photo")
     print("(2) for interactive mode")
+    print("(3) for sending word to arm to type out")
 
 def save_and_output_image(b_output : bytearray) -> bool:
     try:
@@ -75,7 +79,7 @@ def flush_whats_coming_in(ser: serial.Serial) -> int:
 
 if __name__ == "__main__":
     #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "COM3"
+    port = "COM4"
     baud = 57600
     timeout = 3
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -117,7 +121,7 @@ if __name__ == "__main__":
                 print("Request unsuccessful.")
 
         ##### ask for a photo #####
-        if request == 1:
+        elif request == 1:
             size_of_image = b''
             while True:
                 # read the size of the image from the server
@@ -157,7 +161,7 @@ if __name__ == "__main__":
                 print("Image successfully saved and shown.")
 
         ##### interactive, controller mode #####
-        if request == 2:
+        elif request == 2:
             print("Entering interactive mode. Connecting to controller...")
             
             # !TODO: fix this controller whatnot
@@ -227,6 +231,15 @@ if __name__ == "__main__":
                 #read_images(ser)
 
             print("Quitting interactive mode.")
+
+        ##### send arm a word to autonomously take care of
+        elif request == 3:
+            print("Input word to command arm: ")
+            word = input(">> ")
+
+            ser.write(f"{word}\n".encode())
+
+            print("Sent word.")
                 
 
     ser.close()
