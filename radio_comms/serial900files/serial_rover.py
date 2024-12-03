@@ -53,8 +53,8 @@ def send_images(ser: serial.Serial) -> None:
 ################
 
 if __name__ == "__main__":
-    #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "/dev/cu.usbserial-B001VC58"
+    port = "/dev/cu.usbserial-BG00HO5R"
+    #port = "/dev/cu.usbserial-B001VC58"
     #port = "COM4"
     baud = 57600
     timeout = 3
@@ -170,6 +170,16 @@ if __name__ == "__main__":
 
                 # TODO function to output controls through or something
                 print(curr_value)
+        
+        elif request[0] == 3:
+            print("Receiving word to input.")
+            b_read_output = b''
+            while len(b_read_output) == 0:
+                b_read_output = ser.readline()
+
+            word = b_read_output.decode()
+            print(f"Word received: {word[:-1]}")
+        
         awaiting_request = True
         request = b''           
 
