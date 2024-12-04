@@ -102,17 +102,18 @@ if __name__ == "__main__":
 
             print("Size of image calculating. Sending.")
             ser.write(struct.pack("=L", size_of_image))
+            b_output = b''
 
             # read acknowledgment from user
-            while True:
+            while len(b_output) == 0:
                 b_output = ser.read(1)
-                if b_output == b'':
-                    continue
 
-                # if acknowledgement received
-                if struct.unpack("=B", b_output)[0] == 1:
-                    print("Size was acknowledged.")
-                    break
+            # if acknowledgement received
+            if struct.unpack("=B", b_output)[0] != 1:
+                print("Size was not acknowledged.")
+                break
+            
+            print("Size was acknowledged.")
             
             # send the image over
             print("Image sending.")

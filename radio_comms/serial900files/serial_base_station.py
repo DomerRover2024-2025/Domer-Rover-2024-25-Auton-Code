@@ -123,16 +123,14 @@ if __name__ == "__main__":
         ##### ask for a photo #####
         elif request == 1:
             size_of_image = b''
-            while True:
+            while len(size_of_image) != struct.calcsize("=L"):
                 # read the size of the image from the server
                 size_of_image += ser.read(struct.calcsize("=L"))
 
-                # if actually grabbed a number the length of the size of the image,
-                # unpack it and send an acknowledgment that it was received
-                if len(size_of_image) == struct.calcsize("=L"):
-                    size_of_image = struct.unpack("=L", size_of_image)[0]
-                    print("size of image:", size_of_image)
-                    break
+        # if actually grabbed a number the length of the size of the image,
+        # unpack it and send an acknowledgment that it was received
+            size_of_image = struct.unpack("=L", size_of_image)[0]
+            print("size of image:", size_of_image)
 
             # if the size of the image is 0 interpret as a fail
             if size_of_image == 0:
