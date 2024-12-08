@@ -107,10 +107,9 @@ if __name__ == "__main__":
                 ser.write(struct.pack(">L", size_of_image))
                 continue
 
-            print("Size of image calculating. Sending.")
+            print(f"Size of image calculated as {size_of_image}. Sending.")
             ser.write(struct.pack(">L", size_of_image))
             b_output = b''
-            print(size_of_image)
             # read acknowledgment from user
             while len(b_output) == 0:
                 b_output = ser.read(1)
@@ -153,32 +152,46 @@ if __name__ == "__main__":
             future = executor.submit(send_images, ser)
 
             # read the controls and output that through a function
-            while True:
+            try:
+                while True:
+                    can_read = ser.read(struct.calcsize(">B"))[0]
 
-                #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
-                first_float_output = ser.read(struct.calcsize(">f"))
-                if not len(first_float_output):
-                    continue
-                second_float_output = ser.read(struct.calcsize(">f"))
-                int_output = ser.read(56)
-                floats = []
-                floats.append(struct.unpack(">f", first_float_output))
-                floats.append(struct.unpack(">f", second_float_output))
-                ints = np.frombuffer(int_output, dtype=np.uint32)
-                curr_value = floats + ints
-                
-                if False:
-                #if curr_value == 1_000:
-                    print("Exiting interactive mode.")
-                    keep_sending_images = False
-                    future.cancel()
-                    executor.shutdown()
-                    break
-                #send_images(ser)
+                    if can_read == 0:
+                        break
 
-                # TODO function to output controls through or something
-                print(curr_value)
-        
+                    #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
+                    first_float_output = ser.read(struct.calcsize(">f"))
+                    if not len(first_float_output):
+                        continue
+                    second_float_output = ser.read(struct.calcsize(">f"))
+                    int_output = ser.read(56)
+                    floats = []
+                    floats.append(struct.unpack(">f", first_float_output))
+                    floats.append(struct.unpack(">f", second_float_output))
+                    ints = np.frombuffer(int_output, dtype=np.uint32)
+                    curr_value = floats + ints
+                    
+                    if False:
+                    #if curr_value == 1_000:
+                        print("Exiting interactive mode.")
+                        keep_sending_images = False
+                        future.cancel()
+                        executor.shutdown()
+                        break
+                    #send_images(ser)
+
+                    # TODO function to output controls through or something
+                    print(curr_value)
+            except Exception as e:
+                print(e)
+            finally:
+                keep_sending_images = False
+                future.cancel()
+                executor.shutdown()
+
+            print("Exiting interactive mode.")
+
+        ##### receive a word to autonomously do the arm control with        
         elif request[0] == 3:
             print("Receiving word to input.")
             b_read_output = b''
@@ -187,7 +200,33 @@ if __name__ == "__main__":
 
             word = b_read_output.decode()
             print(f"Word received: {word[:-1]}")
-        
+
+        ##### heartbeat mode: send over GNSS coordinates
+        elif request[0] == 4:
+            print("Activating heartbeat mode. Sending coordinates...")
+            ser.timeout = 1.0
+            while True:
+                # read if it should stop
+                should_end = ser.read(1)
+                if len(should_end) != 0:
+                    break
+
+                # !TODO: actually receive the coordinates somehow
+                try:
+                    # temp coords for x, y
+                    coord_x = "3.141592654"
+                    coord_y = "2.718281828"
+
+                # if the coordinate grabbing fails
+                except:
+                    coord_x = "-1"
+                    coord_y = "-1"
+
+                coord_string = f"{coord_x} {coord_y}\n"
+                ser.write(coord_string.encode())
+
+            print("Quitting heartbeat mode.")
+
         awaiting_request = True
         request = b''           
 
