@@ -12,7 +12,7 @@ import struct
 import numpy as np
 import concurrent.futures
 import time
-#np.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(threshold=sys.maxsize)
 
 #####################
 ##### FUNCTIONS #####
@@ -28,10 +28,13 @@ def capture_image() -> tuple[int, bytearray]:
         #print("Failed to capture image.")
         return 0, None
 
+    with open("temp2.txt", 'bw') as f:
+        f.write(frame)
+
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 10]
     encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
     size_of_data = len(buffer)
-    #size_packed = struct.pack("=L", size_of_data)
+    #size_packed = struct.pack(">L", size_of_data)
     return size_of_data, buffer
 
 
@@ -41,7 +44,7 @@ def send_images(ser: serial.Serial) -> None:
     while keep_sending_images:
         size_of_image, buffer = capture_image()
 
-        packed_size = struct.pack("=L", size_of_image)
+        packed_size = struct.pack(">L", size_of_image)
         ser.write(packed_size)
         if size_of_image == 0:
             return
@@ -53,8 +56,8 @@ def send_images(ser: serial.Serial) -> None:
 ################
 
 if __name__ == "__main__":
-    port = "/dev/cu.usbserial-BG00HO5R"
-    #port = "/dev/cu.usbserial-B001VC58"
+    #port = "/dev/cu.usbserial-BG00HO5R"
+    port = "/dev/cu.usbserial-B001VC58"
     #port = "COM4"
     baud = 57600
     timeout = 3
@@ -77,13 +80,13 @@ if __name__ == "__main__":
             continue
 
         # unpack to see what the original number was
-        request = struct.unpack("=B", request)
+        request = struct.unpack(">B", request)
 
         ###### end connection ######
         if request[0] == 0:
             print("Request to quit received.")
             exit_success = 1 # hardcode a success right now
-            ser.write(struct.pack("=B", exit_success))
+            ser.write(struct.pack(">B", exit_success))
             if exit_success == 1:
                 break
 
@@ -94,22 +97,25 @@ if __name__ == "__main__":
             # take photo and get size
             size_of_image, buffer = capture_image()
 
+            with open("temp1.txt", 'bw') as f:
+                f.write(buffer)
+
             # if the size is 0, the image failed
             if size_of_image == 0:
                 print("Image capture failed.")
-                ser.write(struct.pack("=L", size_of_image))
+                ser.write(struct.pack(">L", size_of_image))
                 continue
 
             print("Size of image calculating. Sending.")
-            ser.write(struct.pack("=L", size_of_image))
+            ser.write(struct.pack(">L", size_of_image))
             b_output = b''
-
+            print(size_of_image)
             # read acknowledgment from user
             while len(b_output) == 0:
                 b_output = ser.read(1)
 
             # if acknowledgement received
-            if struct.unpack("=B", b_output)[0] != 1:
+            if struct.unpack(">B", b_output)[0] != 1:
                 print("Size was not acknowledged.")
                 break
             
@@ -131,7 +137,7 @@ if __name__ == "__main__":
             while len(did_controller_connect) == 0:
                 did_controller_connect = ser.read(1)
 
-            did_controller_connect = struct.unpack("=B", did_controller_connect)[0]
+            did_controller_connect = struct.unpack(">B", did_controller_connect)[0]
 
             # if the controller did not connect, stop
             if not did_controller_connect:
