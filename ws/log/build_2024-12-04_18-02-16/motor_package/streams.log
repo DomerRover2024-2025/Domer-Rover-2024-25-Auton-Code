@@ -1,0 +1,27 @@
+[1.941s] Invoking command in '/home/domerrover/ws/build/motor_package': PYTHONPATH=/home/domerrover/ws/build/motor_package/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/domerrover/ws/install/motor_package/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py develop --editable --build-directory /home/domerrover/ws/build/motor_package/build --no-deps symlink_data
+[2.501s] running develop
+[2.502s] /usr/lib/python3/dist-packages/setuptools/command/easy_install.py:158: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[2.502s]   warnings.warn(
+[2.842s] running egg_info
+[2.842s] creating motor_package.egg-info
+[2.842s] writing motor_package.egg-info/PKG-INFO
+[2.843s] writing dependency_links to motor_package.egg-info/dependency_links.txt
+[2.843s] writing entry points to motor_package.egg-info/entry_points.txt
+[2.843s] writing requirements to motor_package.egg-info/requires.txt
+[2.843s] writing top-level names to motor_package.egg-info/top_level.txt
+[2.844s] writing manifest file 'motor_package.egg-info/SOURCES.txt'
+[2.848s] reading manifest file 'motor_package.egg-info/SOURCES.txt'
+[2.849s] writing manifest file 'motor_package.egg-info/SOURCES.txt'
+[2.852s] running build_ext
+[2.852s] Creating /home/domerrover/ws/install/motor_package/lib/python3.10/site-packages/motor-package.egg-link (link to .)
+[2.854s] Installing jetsonTalker script to /home/domerrover/ws/install/motor_package/lib/motor_package
+[2.855s] Installing joystickTalker script to /home/domerrover/ws/install/motor_package/lib/motor_package
+[2.855s] 
+[2.855s] Installed /home/domerrover/ws/build/motor_package
+[2.855s] running symlink_data
+[2.855s] creating /home/domerrover/ws/install/motor_package/share/ament_index
+[2.856s] creating /home/domerrover/ws/install/motor_package/share/ament_index/resource_index
+[2.856s] creating /home/domerrover/ws/install/motor_package/share/ament_index/resource_index/packages
+[2.856s] symbolically linking /home/domerrover/ws/build/motor_package/resource/motor_package -> /home/domerrover/ws/install/motor_package/share/ament_index/resource_index/packages
+[2.856s] symbolically linking /home/domerrover/ws/build/motor_package/package.xml -> /home/domerrover/ws/install/motor_package/share/motor_package
+[2.943s] Invoked command in '/home/domerrover/ws/build/motor_package' returned '0': PYTHONPATH=/home/domerrover/ws/build/motor_package/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/domerrover/ws/install/motor_package/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py develop --editable --build-directory /home/domerrover/ws/build/motor_package/build --no-deps symlink_data

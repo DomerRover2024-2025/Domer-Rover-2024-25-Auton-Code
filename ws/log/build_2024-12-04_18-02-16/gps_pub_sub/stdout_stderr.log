@@ -1,0 +1,24 @@
+running develop
+/usr/lib/python3/dist-packages/setuptools/command/easy_install.py:158: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running egg_info
+creating gps_pub_sub.egg-info
+writing gps_pub_sub.egg-info/PKG-INFO
+writing dependency_links to gps_pub_sub.egg-info/dependency_links.txt
+writing entry points to gps_pub_sub.egg-info/entry_points.txt
+writing requirements to gps_pub_sub.egg-info/requires.txt
+writing top-level names to gps_pub_sub.egg-info/top_level.txt
+writing manifest file 'gps_pub_sub.egg-info/SOURCES.txt'
+reading manifest file 'gps_pub_sub.egg-info/SOURCES.txt'
+writing manifest file 'gps_pub_sub.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/domerrover/ws/install/gps_pub_sub/lib/python3.10/site-packages/gps-pub-sub.egg-link (link to .)
+Installing GPS_pub_node script to /home/domerrover/ws/install/gps_pub_sub/lib/gps_pub_sub
+
+Installed /home/domerrover/ws/build/gps_pub_sub
+running symlink_data
+creating /home/domerrover/ws/install/gps_pub_sub/share/ament_index
+creating /home/domerrover/ws/install/gps_pub_sub/share/ament_index/resource_index
+creating /home/domerrover/ws/install/gps_pub_sub/share/ament_index/resource_index/packages
+symbolically linking /home/domerrover/ws/build/gps_pub_sub/resource/gps_pub_sub -> /home/domerrover/ws/install/gps_pub_sub/share/ament_index/resource_index/packages
+symbolically linking /home/domerrover/ws/build/gps_pub_sub/package.xml -> /home/domerrover/ws/install/gps_pub_sub/share/gps_pub_sub

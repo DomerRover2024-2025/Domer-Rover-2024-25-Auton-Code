@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+imu_package/__init__.py
+imu_package/imu_talker.py
+imu_package.egg-info/PKG-INFO
+imu_package.egg-info/SOURCES.txt
+imu_package.egg-info/dependency_links.txt
+imu_package.egg-info/entry_points.txt
+imu_package.egg-info/requires.txt
+imu_package.egg-info/top_level.txt
+imu_package.egg-info/zip-safe
+resource/imu_package

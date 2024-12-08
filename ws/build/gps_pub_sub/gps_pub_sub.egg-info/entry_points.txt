@@ -1,0 +1,3 @@
+[console_scripts]
+GPS_pub_node = gps_pub_sub.GPS_pub_node:main
+

@@ -1,0 +1,31 @@
+running egg_info
+creating ../build/imu/imu.egg-info
+writing ../build/imu/imu.egg-info/PKG-INFO
+writing dependency_links to ../build/imu/imu.egg-info/dependency_links.txt
+writing entry points to ../build/imu/imu.egg-info/entry_points.txt
+writing requirements to ../build/imu/imu.egg-info/requires.txt
+writing top-level names to ../build/imu/imu.egg-info/top_level.txt
+writing manifest file '../build/imu/imu.egg-info/SOURCES.txt'
+reading manifest file '../build/imu/imu.egg-info/SOURCES.txt'
+writing manifest file '../build/imu/imu.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/domerrover/ws/src/build/imu/build
+creating /home/domerrover/ws/src/build/imu/build/lib
+creating /home/domerrover/ws/src/build/imu/build/lib/imu
+copying imu/__init__.py -> /home/domerrover/ws/src/build/imu/build/lib/imu
+running install
+running install_lib
+creating /home/domerrover/ws/src/install/imu/lib/python3.10/site-packages/imu
+copying /home/domerrover/ws/src/build/imu/build/lib/imu/__init__.py -> /home/domerrover/ws/src/install/imu/lib/python3.10/site-packages/imu
+byte-compiling /home/domerrover/ws/src/install/imu/lib/python3.10/site-packages/imu/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/domerrover/ws/src/install/imu/share/ament_index
+creating /home/domerrover/ws/src/install/imu/share/ament_index/resource_index
+creating /home/domerrover/ws/src/install/imu/share/ament_index/resource_index/packages
+copying resource/imu -> /home/domerrover/ws/src/install/imu/share/ament_index/resource_index/packages
+copying package.xml -> /home/domerrover/ws/src/install/imu/share/imu
+running install_egg_info
+Copying ../build/imu/imu.egg-info to /home/domerrover/ws/src/install/imu/lib/python3.10/site-packages/imu-0.0.0-py3.10.egg-info
+running install_scripts
+writing list of installed files to '/home/domerrover/ws/src/build/imu/install.log'

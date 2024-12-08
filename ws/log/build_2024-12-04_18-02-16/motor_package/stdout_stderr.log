@@ -1,0 +1,25 @@
+running develop
+/usr/lib/python3/dist-packages/setuptools/command/easy_install.py:158: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+running egg_info
+creating motor_package.egg-info
+writing motor_package.egg-info/PKG-INFO
+writing dependency_links to motor_package.egg-info/dependency_links.txt
+writing entry points to motor_package.egg-info/entry_points.txt
+writing requirements to motor_package.egg-info/requires.txt
+writing top-level names to motor_package.egg-info/top_level.txt
+writing manifest file 'motor_package.egg-info/SOURCES.txt'
+reading manifest file 'motor_package.egg-info/SOURCES.txt'
+writing manifest file 'motor_package.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/domerrover/ws/install/motor_package/lib/python3.10/site-packages/motor-package.egg-link (link to .)
+Installing jetsonTalker script to /home/domerrover/ws/install/motor_package/lib/motor_package
+Installing joystickTalker script to /home/domerrover/ws/install/motor_package/lib/motor_package
+
+Installed /home/domerrover/ws/build/motor_package
+running symlink_data
+creating /home/domerrover/ws/install/motor_package/share/ament_index
+creating /home/domerrover/ws/install/motor_package/share/ament_index/resource_index
+creating /home/domerrover/ws/install/motor_package/share/ament_index/resource_index/packages
+symbolically linking /home/domerrover/ws/build/motor_package/resource/motor_package -> /home/domerrover/ws/install/motor_package/share/ament_index/resource_index/packages
+symbolically linking /home/domerrover/ws/build/motor_package/package.xml -> /home/domerrover/ws/install/motor_package/share/motor_package
