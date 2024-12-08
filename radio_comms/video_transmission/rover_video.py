@@ -5,8 +5,8 @@ import time
 ###### CONSTANTS ######
 HOST = "*"
 PORT = 12346
-QUALITY = 10
-TIME_BETWEEN_FRAMES = 0.25
+QUALITY = 75
+TIME_BETWEEN_FRAMES = 0.05
 
 # create publish socket and video capture object
 context = zmq.Context()
