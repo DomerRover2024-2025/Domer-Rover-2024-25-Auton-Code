@@ -1,0 +1,26 @@
+[1.886s] Invoking command in '/home/domerrover/ws/build/imu_package': PYTHONPATH=/home/domerrover/ws/build/imu_package/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/domerrover/ws/install/imu_package/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py develop --editable --build-directory /home/domerrover/ws/build/imu_package/build --no-deps symlink_data
+[2.446s] running develop
+[2.449s] /usr/lib/python3/dist-packages/setuptools/command/easy_install.py:158: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+[2.449s]   warnings.warn(
+[2.796s] running egg_info
+[2.796s] creating imu_package.egg-info
+[2.796s] writing imu_package.egg-info/PKG-INFO
+[2.797s] writing dependency_links to imu_package.egg-info/dependency_links.txt
+[2.797s] writing entry points to imu_package.egg-info/entry_points.txt
+[2.797s] writing requirements to imu_package.egg-info/requires.txt
+[2.798s] writing top-level names to imu_package.egg-info/top_level.txt
+[2.798s] writing manifest file 'imu_package.egg-info/SOURCES.txt'
+[2.803s] reading manifest file 'imu_package.egg-info/SOURCES.txt'
+[2.804s] writing manifest file 'imu_package.egg-info/SOURCES.txt'
+[2.807s] running build_ext
+[2.808s] Creating /home/domerrover/ws/install/imu_package/lib/python3.10/site-packages/imu-package.egg-link (link to .)
+[2.810s] Installing imuTalker script to /home/domerrover/ws/install/imu_package/lib/imu_package
+[2.810s] 
+[2.810s] Installed /home/domerrover/ws/build/imu_package
+[2.811s] running symlink_data
+[2.811s] creating /home/domerrover/ws/install/imu_package/share/ament_index
+[2.812s] creating /home/domerrover/ws/install/imu_package/share/ament_index/resource_index
+[2.812s] creating /home/domerrover/ws/install/imu_package/share/ament_index/resource_index/packages
+[2.812s] symbolically linking /home/domerrover/ws/build/imu_package/resource/imu_package -> /home/domerrover/ws/install/imu_package/share/ament_index/resource_index/packages
+[2.812s] symbolically linking /home/domerrover/ws/build/imu_package/package.xml -> /home/domerrover/ws/install/imu_package/share/imu_package
+[2.914s] Invoked command in '/home/domerrover/ws/build/imu_package' returned '0': PYTHONPATH=/home/domerrover/ws/build/imu_package/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/domerrover/ws/install/imu_package/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py develop --editable --build-directory /home/domerrover/ws/build/imu_package/build --no-deps symlink_data

@@ -1,0 +1,3 @@
+[console_scripts]
+imuTalker = imu_package.imu_talker:main
+

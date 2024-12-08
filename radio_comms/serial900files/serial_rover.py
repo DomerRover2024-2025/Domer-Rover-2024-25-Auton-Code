@@ -57,8 +57,9 @@ def send_images(ser: serial.Serial) -> None:
 
 if __name__ == "__main__":
     #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "/dev/cu.usbserial-B001VC58"
+    #port = "/dev/cu.usbserial-B001VC58"
     #port = "COM4"
+    port = "ttyTCU0"
     baud = 57600
     timeout = 3
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
