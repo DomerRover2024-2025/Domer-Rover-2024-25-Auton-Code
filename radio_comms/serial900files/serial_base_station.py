@@ -28,6 +28,7 @@ def print_options() -> None:
     print("(1) for photo")
     print("(2) for interactive mode")
     print("(3) for sending word to arm to type out")
+    print("(4) Heartbeat mode: Receive coordinates")
 
 def save_and_output_image(b_output : bytearray) -> bool:
     try:
@@ -45,11 +46,11 @@ def save_and_output_image(b_output : bytearray) -> bool:
 keep_reading_images = True
 def read_images(ser : serial.Serial):
     while keep_reading_images:
-        size_of_image = ser.read(struct.calcsize("=L"))
-        if len(size_of_image) != struct.calcsize("=L"):
+        size_of_image = ser.read(struct.calcsize(">L"))
+        if len(size_of_image) != struct.calcsize(">L"):
             continue
         
-        size_of_image = struct.unpack("=L", size_of_image)[0]
+        size_of_image = struct.unpack(">L", size_of_image)[0]
         if size_of_image == 0:
             continue
 
@@ -79,7 +80,7 @@ def flush_whats_coming_in(ser: serial.Serial) -> int:
 
 if __name__ == "__main__":
     #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "COM4"
+    port = "COM3"
     baud = 57600
     timeout = 3
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -106,6 +107,7 @@ if __name__ == "__main__":
         # otherwise it sends the request over to the client
         ser.write(struct.pack("=B", request))
 
+        time.sleep(0.25)
         ###### end connection ######
         if request == 0: 
             print("Request to quit sent.")
@@ -123,13 +125,13 @@ if __name__ == "__main__":
         ##### ask for a photo #####
         elif request == 1:
             size_of_image = b''
-            while len(size_of_image) != struct.calcsize("=L"):
+            while len(size_of_image) != struct.calcsize(">L"):
                 # read the size of the image from the server
-                size_of_image += ser.read(struct.calcsize("=L"))
+                size_of_image += ser.read(struct.calcsize(">L"))
 
         # if actually grabbed a number the length of the size of the image,
         # unpack it and send an acknowledgment that it was received
-            size_of_image = struct.unpack("=L", size_of_image)[0]
+            size_of_image = struct.unpack(">L", size_of_image)[0]
             print("size of image:", size_of_image)
 
             # if the size of the image is 0 interpret as a fail
@@ -187,45 +189,60 @@ if __name__ == "__main__":
             keep_reading_images = True
             future = image_executor.submit(read_images, ser)
 
-            while True:
-                #current_control = input(">> ")
+            try:
+                good_control = 1
+                while True:
+                    #current_control = input(">> ")
 
-                # get the current controls, which is a 16-long array of
-                # mixed int and float values
-                current_control = next(run)
-                    # if not len(current_control):
-                    #     print("Please enter a number.", file=sys.stderr)
-                    #     continue
-                    # try:
-                    #     int_curr_control = int(cSurrent_control)
-                    # except ValueError as v:
-                    #     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
-                    #     continue
-                    # if int(current_control) > 255 or int(current_control) < 0:
-                    #     print("Controls must be between 0 and 255.", file=sys.stderr)
-                    #     continue
-                
-                #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
-                float_controls = current_control[:2]
-                int_controls = current_control[2:]
-                ser.write(struct.pack(">f", float_controls[0]))
-                ser.write(struct.pack(">f", float_controls[1]))
-                ser.write(bytearray(int_controls))
-                #ser.write(struct.pack("=B", int(current_control)))
+                    # get the current controls, which is a 16-long array of
+                    # mixed int and float values
+                    try:
+                        current_control = next(run)
+                    except Exception as e:
+                        print(e)
+                        good_control = 0
+                        # if not len(current_control):
+                        #     print("Please enter a number.", file=sys.stderr)
+                        #     continue
+                        # try:
+                        #     int_curr_control = int(cSurrent_control)
+                        # except ValueError as v:
+                        #     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
+                        #     continue
+                        # if int(current_control) > 255 or int(current_control) < 0:
+                        #     print("Controls must be between 0 and 255.", file=sys.stderr)
+                        #     continue
+                    ser.write(struct.pack(">B", good_control))
 
-                # on exit:
-                if False:
-                #if int(current_control) == 1_000:
-                    keep_reading_images = False
-                    print("cancelling future")
-                    future.cancel()
-                    print("shutting down executor")
-                    image_executor.shutdown()
-                    print("outwaiting: ", ser.out_waiting)
-                    print("inwaiting: ", ser.in_waiting)
-                    data_lost = flush_whats_coming_in(ser)
-                    print("data lost: ", data_lost)
-                    break
+                    # stop sending over anything if the controller failed or something along those lines
+                    if good_control == 0:
+                        break
+
+                    #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
+                    float_controls = current_control[:2]
+                    int_controls = current_control[2:]
+                    ser.write(struct.pack(">f", float_controls[0]))
+                    ser.write(struct.pack(">f", float_controls[1]))
+                    ser.write(bytearray(int_controls))
+                    #ser.write(struct.pack("=B", int(current_control)))
+
+                    # on exit:
+                    if False:
+                    #if int(current_control) == 1_000:
+                        break
+            except Exception as e:
+                print(e)
+            finally:
+                keep_reading_images = False
+                print("cancelling future")
+                future.cancel()
+                print("shutting down executor")
+                image_executor.shutdown()
+                print("outwaiting: ", ser.out_waiting)
+                print("inwaiting: ", ser.in_waiting)
+                data_lost = flush_whats_coming_in(ser)
+                print("data lost: ", data_lost)
+
                 #read_images(ser)
 
             print("Quitting interactive mode.")
@@ -238,6 +255,25 @@ if __name__ == "__main__":
             ser.write(f"{word}\n".encode())
 
             print("Sent word.")
+        
+        ##### heartbeat mode: simply receive the float coordinates
+        elif request == 4:
+            print("Activating heartbeat mode. ^C to quit.")
+            print("Receiving coordinates...")
+            try:
+                while True:
+                    coordinates = ser.readline()
+                    if len(coordinates) == 0:
+                        print("Rover could not be found.")
+                        continue
+
+                    coord_x, coord_y = coordinates.decode().split()
+
+                    print(f"coord_x = {coord_x}, coord_y = {coord_y}")
+            except KeyboardInterrupt:
+                print("Exiting heartbeat mode.")
+                ser.write(b"1")
+
                 
 
     ser.close()
