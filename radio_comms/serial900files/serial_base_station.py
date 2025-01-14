@@ -79,8 +79,9 @@ def flush_whats_coming_in(ser: serial.Serial) -> int:
 ################
 
 if __name__ == "__main__":
-    #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "COM3"
+    port = "/dev/tty.usbserial-BG00HO5R"
+    #port = "/dev/cu.usbserial-B001VC58"
+    #port = "COM3"
     baud = 57600
     timeout = 3
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
