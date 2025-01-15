@@ -74,6 +74,162 @@ def flush_whats_coming_in(ser: serial.Serial) -> int:
         count += len(output)
     return count
 
+def debug_check(ser: serial.Serial):
+    with open("remaining_content.txt", 'bw') as f:
+        while True:
+            output = ser.read(1)
+            if not len(output): break
+            f.write(output)
+    return
+
+def request_and_read_image(ser: serial.Serial):
+    size_of_image = b''
+    while len(size_of_image) != struct.calcsize(">L"):
+        # read the size of the image from the server
+        size_of_image += ser.read(struct.calcsize(">L"))
+
+    # if actually grabbed a number the length of the size of the image,
+    # unpack it and send an acknowledgment that it was received
+    size_of_image = struct.unpack(">L", size_of_image)[0]
+    print("size of image:", size_of_image)
+
+    # if the size of the image is 0 interpret as a fail
+    if size_of_image == 0:
+        print("Image capturing failed. Returning to menu.")
+        return
+
+    print("Size received. Sending acknowledgement.")
+    ser.write(struct.pack("=B", 1))
+
+    b_output = b''
+    time.sleep(1)
+
+    print("Reading image.")
+
+    # keep reading until the entire image is read
+    while len(b_output) < size_of_image:
+        b_output += ser.read(8_192) # duplicate of 2
+
+    print("Bytes equal to size of image read.")
+
+    # save and output the image
+    success = save_and_output_image(b_output=b_output)
+    if not success:
+        print("Image failed to be saved/shown.")
+    else:
+        print("Image successfully saved and shown.")
+
+def interactive_mode(ser: serial.Serial):
+    print("Entering interactive mode. Connecting to controller...")
+            
+    # !TODO: fix this controller whatnot
+    # send controller connected
+    controller_connected = True
+    
+    joysticks = {}
+
+    # send over that the controller connected
+    ser.write(struct.pack("=B", controller_connected))
+
+    # if the controller failed (also unnecessary right now)
+    if not controller_connected:
+        print("Controller not responding. Exiting interactive mode, sending update.")
+        return
+
+    print("Controller responded.")
+    print("Use the controller now:")
+
+    # this is a generator to control the controller
+    run = joystickDriving.run(joysticks)
+
+    # set things up to receive photos at the same time
+    image_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    keep_reading_images = True
+    future = image_executor.submit(read_images, ser)
+
+    try:
+        good_control = 1
+        while True:
+            #current_control = input(">> ")
+
+            # get the current controls, which is a 16-long array of
+            # mixed int and float values
+            try:
+                current_control = next(run)
+            except Exception as e:
+                print(e)
+                good_control = 0
+                # if not len(current_control):
+                #     print("Please enter a number.", file=sys.stderr)
+                #     continue
+                # try:
+                #     int_curr_control = int(cSurrent_control)
+                # except ValueError as v:
+                #     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
+                #     continue
+                # if int(current_control) > 255 or int(current_control) < 0:
+                #     print("Controls must be between 0 and 255.", file=sys.stderr)
+                #     continue
+            ser.write(struct.pack(">B", good_control))
+
+            # stop sending over anything if the controller failed or something along those lines
+            if good_control == 0:
+                break
+
+            #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
+            float_controls = current_control[:2]
+            int_controls = current_control[2:]
+            ser.write(struct.pack(">f", float_controls[0]))
+            ser.write(struct.pack(">f", float_controls[1]))
+            ser.write(bytearray(int_controls))
+            #ser.write(struct.pack("=B", int(current_control)))
+
+            # on exit:
+            if False:
+            #if int(current_control) == 1_000:
+                break
+    except Exception as e:
+        print(e)
+    finally:
+        keep_reading_images = False
+        print("cancelling future")
+        future.cancel()
+        print("shutting down executor")
+        image_executor.shutdown()
+        print("outwaiting: ", ser.out_waiting)
+        print("inwaiting: ", ser.in_waiting)
+        data_lost = flush_whats_coming_in(ser)
+        print("data lost: ", data_lost)
+
+        #read_images(ser)
+
+    print("Quitting interactive mode.")
+
+def arm_request(ser: serial.Serial):
+    print("Input word to command arm: ")
+    word = input(">> ")
+
+    ser.write(f"{word}\n".encode())
+
+    print("Sent word.")
+
+def heartbeat(ser: serial.Serial):
+    print("Activating heartbeat mode. ^C to quit.")
+    print("Receiving coordinates...")
+    try:
+        while True:
+            coordinates = ser.readline()
+            if len(coordinates) == 0:
+                print("Rover could not be found.")
+                continue
+
+            coord_x, coord_y = coordinates.decode().split()
+
+            print(f"coord_x = {coord_x}, coord_y = {coord_y}")
+    except KeyboardInterrupt:
+        print("Exiting heartbeat mode.")
+        ser.write(b"1")
+
 ################
 ##### MAIN #####
 ################
@@ -98,11 +254,12 @@ if __name__ == "__main__":
         # this request is for debugging, and prints the remaining contents
         # of the buffer into a file
         if request == 10:
-            with open("remaining_content.txt", 'bw') as f:
-                while True:
-                    output = ser.read(1)
-                    if not len(output): break
-                    f.write(output)
+            debug_check(ser)
+            # with open("remaining_content.txt", 'bw') as f:
+            #     while True:
+            #         output = ser.read(1)
+            #         if not len(output): break
+            #         f.write(output)
             continue
         
         # otherwise it sends the request over to the client
@@ -125,155 +282,159 @@ if __name__ == "__main__":
 
         ##### ask for a photo #####
         elif request == 1:
-            size_of_image = b''
-            while len(size_of_image) != struct.calcsize(">L"):
-                # read the size of the image from the server
-                size_of_image += ser.read(struct.calcsize(">L"))
+            request_and_read_image(ser)
+        #     size_of_image = b''
+        #     while len(size_of_image) != struct.calcsize(">L"):
+        #         # read the size of the image from the server
+        #         size_of_image += ser.read(struct.calcsize(">L"))
 
-        # if actually grabbed a number the length of the size of the image,
-        # unpack it and send an acknowledgment that it was received
-            size_of_image = struct.unpack(">L", size_of_image)[0]
-            print("size of image:", size_of_image)
+        # # if actually grabbed a number the length of the size of the image,
+        # # unpack it and send an acknowledgment that it was received
+        #     size_of_image = struct.unpack(">L", size_of_image)[0]
+        #     print("size of image:", size_of_image)
 
-            # if the size of the image is 0 interpret as a fail
-            if size_of_image == 0:
-                print("Image capturing failed. Returning to menu.")
-                continue
+        #     # if the size of the image is 0 interpret as a fail
+        #     if size_of_image == 0:
+        #         print("Image capturing failed. Returning to menu.")
+        #         continue
     
-            print("Size received. Sending acknowledgement.")
-            ser.write(struct.pack("=B", 1))
+        #     print("Size received. Sending acknowledgement.")
+        #     ser.write(struct.pack("=B", 1))
 
-            b_output = b''
-            time.sleep(1)
+        #     b_output = b''
+        #     time.sleep(1)
 
-            print("Reading image.")
+        #     print("Reading image.")
 
-            # keep reading until the entire image is read
-            while len(b_output) < size_of_image:
-                b_output += ser.read(8_192) # duplicate of 2
+        #     # keep reading until the entire image is read
+        #     while len(b_output) < size_of_image:
+        #         b_output += ser.read(8_192) # duplicate of 2
 
-            print("Bytes equal to size of image read.")
+        #     print("Bytes equal to size of image read.")
 
-            # save and output the image
-            success = save_and_output_image(b_output=b_output)
-            if not success:
-                print("Image failed to be saved/shown.")
-            else:
-                print("Image successfully saved and shown.")
+        #     # save and output the image
+        #     success = save_and_output_image(b_output=b_output)
+        #     if not success:
+        #         print("Image failed to be saved/shown.")
+        #     else:
+        #         print("Image successfully saved and shown.")
 
         ##### interactive, controller mode #####
         elif request == 2:
-            print("Entering interactive mode. Connecting to controller...")
+            interactive_mode(ser)
+            # print("Entering interactive mode. Connecting to controller...")
             
-            # !TODO: fix this controller whatnot
-            # send controller connected
-            controller_connected = True
+            # # !TODO: fix this controller whatnot
+            # # send controller connected
+            # controller_connected = True
             
-            joysticks = {}
+            # joysticks = {}
 
-            # send over that the controller connected
-            ser.write(struct.pack("=B", controller_connected))
+            # # send over that the controller connected
+            # ser.write(struct.pack("=B", controller_connected))
 
-            # if the controller failed (also unnecessary right now)
-            if not controller_connected:
-                print("Controller not responding. Exiting interactive mode, sending update.")
-                continue
+            # # if the controller failed (also unnecessary right now)
+            # if not controller_connected:
+            #     print("Controller not responding. Exiting interactive mode, sending update.")
+            #     continue
 
-            print("Controller responded.")
-            print("Use the controller now:")
+            # print("Controller responded.")
+            # print("Use the controller now:")
 
-            # this is a generator to control the controller
-            run = joystickDriving.run(joysticks)
+            # # this is a generator to control the controller
+            # run = joystickDriving.run(joysticks)
 
-            # set things up to receive photos at the same time
-            image_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-            keep_reading_images = True
-            future = image_executor.submit(read_images, ser)
+            # # set things up to receive photos at the same time
+            # image_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            # keep_reading_images = True
+            # future = image_executor.submit(read_images, ser)
 
-            try:
-                good_control = 1
-                while True:
-                    #current_control = input(">> ")
+            # try:
+            #     good_control = 1
+            #     while True:
+            #         #current_control = input(">> ")
 
-                    # get the current controls, which is a 16-long array of
-                    # mixed int and float values
-                    try:
-                        current_control = next(run)
-                    except Exception as e:
-                        print(e)
-                        good_control = 0
-                        # if not len(current_control):
-                        #     print("Please enter a number.", file=sys.stderr)
-                        #     continue
-                        # try:
-                        #     int_curr_control = int(cSurrent_control)
-                        # except ValueError as v:
-                        #     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
-                        #     continue
-                        # if int(current_control) > 255 or int(current_control) < 0:
-                        #     print("Controls must be between 0 and 255.", file=sys.stderr)
-                        #     continue
-                    ser.write(struct.pack(">B", good_control))
+            #         # get the current controls, which is a 16-long array of
+            #         # mixed int and float values
+            #         try:
+            #             current_control = next(run)
+            #         except Exception as e:
+            #             print(e)
+            #             good_control = 0
+            #             # if not len(current_control):
+            #             #     print("Please enter a number.", file=sys.stderr)
+            #             #     continue
+            #             # try:
+            #             #     int_curr_control = int(cSurrent_control)
+            #             # except ValueError as v:
+            #             #     print(f"{v}: please enter an integer in [0, 255].", file=sys.stderr)
+            #             #     continue
+            #             # if int(current_control) > 255 or int(current_control) < 0:
+            #             #     print("Controls must be between 0 and 255.", file=sys.stderr)
+            #             #     continue
+            #         ser.write(struct.pack(">B", good_control))
 
-                    # stop sending over anything if the controller failed or something along those lines
-                    if good_control == 0:
-                        break
+            #         # stop sending over anything if the controller failed or something along those lines
+            #         if good_control == 0:
+            #             break
 
-                    #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
-                    float_controls = current_control[:2]
-                    int_controls = current_control[2:]
-                    ser.write(struct.pack(">f", float_controls[0]))
-                    ser.write(struct.pack(">f", float_controls[1]))
-                    ser.write(bytearray(int_controls))
-                    #ser.write(struct.pack("=B", int(current_control)))
+            #         #!TODO: This doesn't work. the ints/floats are ordered strangely in sean's code
+            #         float_controls = current_control[:2]
+            #         int_controls = current_control[2:]
+            #         ser.write(struct.pack(">f", float_controls[0]))
+            #         ser.write(struct.pack(">f", float_controls[1]))
+            #         ser.write(bytearray(int_controls))
+            #         #ser.write(struct.pack("=B", int(current_control)))
 
-                    # on exit:
-                    if False:
-                    #if int(current_control) == 1_000:
-                        break
-            except Exception as e:
-                print(e)
-            finally:
-                keep_reading_images = False
-                print("cancelling future")
-                future.cancel()
-                print("shutting down executor")
-                image_executor.shutdown()
-                print("outwaiting: ", ser.out_waiting)
-                print("inwaiting: ", ser.in_waiting)
-                data_lost = flush_whats_coming_in(ser)
-                print("data lost: ", data_lost)
+            #         # on exit:
+            #         if False:
+            #         #if int(current_control) == 1_000:
+            #             break
+            # except Exception as e:
+            #     print(e)
+            # finally:
+            #     keep_reading_images = False
+            #     print("cancelling future")
+            #     future.cancel()
+            #     print("shutting down executor")
+            #     image_executor.shutdown()
+            #     print("outwaiting: ", ser.out_waiting)
+            #     print("inwaiting: ", ser.in_waiting)
+            #     data_lost = flush_whats_coming_in(ser)
+            #     print("data lost: ", data_lost)
 
-                #read_images(ser)
+            #     #read_images(ser)
 
-            print("Quitting interactive mode.")
+            # print("Quitting interactive mode.")
 
         ##### send arm a word to autonomously take care of
         elif request == 3:
-            print("Input word to command arm: ")
-            word = input(">> ")
+            arm_request(ser)
+            # print("Input word to command arm: ")
+            # word = input(">> ")
 
-            ser.write(f"{word}\n".encode())
+            # ser.write(f"{word}\n".encode())
 
-            print("Sent word.")
+            # print("Sent word.")
         
         ##### heartbeat mode: simply receive the float coordinates
         elif request == 4:
-            print("Activating heartbeat mode. ^C to quit.")
-            print("Receiving coordinates...")
-            try:
-                while True:
-                    coordinates = ser.readline()
-                    if len(coordinates) == 0:
-                        print("Rover could not be found.")
-                        continue
+            heartbeat(ser)
+            # print("Activating heartbeat mode. ^C to quit.")
+            # print("Receiving coordinates...")
+            # try:
+            #     while True:
+            #         coordinates = ser.readline()
+            #         if len(coordinates) == 0:
+            #             print("Rover could not be found.")
+            #             continue
 
-                    coord_x, coord_y = coordinates.decode().split()
+            #         coord_x, coord_y = coordinates.decode().split()
 
-                    print(f"coord_x = {coord_x}, coord_y = {coord_y}")
-            except KeyboardInterrupt:
-                print("Exiting heartbeat mode.")
-                ser.write(b"1")
+            #         print(f"coord_x = {coord_x}, coord_y = {coord_y}")
+            # except KeyboardInterrupt:
+            #     print("Exiting heartbeat mode.")
+            #     ser.write(b"1")
 
                 
 
