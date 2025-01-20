@@ -10,26 +10,19 @@ import sys
     # PAYLOAD: VARIABLE BYTES?
     # CHECKSUM: 1 BIT
 class Message:
-    opcodes = {}
 
     # I am necessitating that the payload ALREADY BE a byte object.
     # I do not know how big it is.
-    def __init__(self, opcode: int, destination: int, payload : bytes):
-        self.opcode = opcode
-        self.destination = destination
-        self.size_of_payload = len(payload)
-        self.payload = payload
-        self.checksum = self.calculate_checksum(payload)
-
-    def __init__(self):
-        self.opcode = None
-        self.destination = None
-        self.size_of_payload = None
-        self.payload = None
-        self.checksum = None
+    def __init__(self, opcode: int=None, destination: int=None, payload : bytes=None):
+        self.opcode : int = opcode
+        self.destination : int = destination
+        self.payload : bytes = payload
+        if payload:
+            self.size_of_payload : int = len(payload)
+            self.checksum : bytes = self.calculate_checksum(payload)
 
     # converting a given bytestring into its corresponding Message counterpart
-    def __init__(self, bytestring : bytes):
+    def convert_from_bytestring(self, bytestring : bytes):
         self.opcode = struct.unpack(">B", bytestring[0])[0]
         self.destination = struct.unpack(">B", bytestring[2])[0]
         self.size_of_payload = struct.unpack(">L", bytestring[3:7])[0]
@@ -67,6 +60,7 @@ class Message:
 
     def set_payload(self, payload):
         self.payload = payload
+        self.size_of_payload = len(payload)
     
     def set_size(self, size):
         if type(size) is not bytes:
