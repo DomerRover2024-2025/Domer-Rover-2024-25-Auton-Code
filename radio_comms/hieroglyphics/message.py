@@ -11,11 +11,14 @@ import sys
     # CHECKSUM: 1 BIT
 class Message:
 
+    message_count = 0
+
     # I am necessitating that the payload ALREADY BE a byte object.
     # I do not know how big it is.
-    def __init__(self, opcode: int=None, destination: int=None, payload : bytes=None):
-        self.opcode : int = opcode
-        self.destination : int = destination
+    def __init__(self, purpose: int=0, payload : bytes=None):
+        self.msg_id : int = self.message_count
+        self.message_count += 1
+        self.purpose : int = purpose
         self.payload : bytes = payload
         if payload:
             self.size_of_payload : int = len(payload)
@@ -23,8 +26,8 @@ class Message:
 
     # converting a given bytestring into its corresponding Message counterpart
     def convert_from_bytestring(self, bytestring : bytes):
-        self.opcode = struct.unpack(">B", bytestring[0])[0]
-        self.destination = struct.unpack(">B", bytestring[2])[0]
+        self.msg_id = struct.unpack(">H", bytestring[0:2])[0]
+        self.purpose = struct.unpack(">B", bytestring[2])[0]
         self.size_of_payload = struct.unpack(">L", bytestring[3:7])[0]
         self.payload = bytestring[7:-1]
         self.checksum = bytestring[-1]
@@ -46,11 +49,11 @@ class Message:
     def get_total_size(self):
         return struct.calcsize(self.opcode)
     
-    def set_opcode(self, opcode):
-        if type(opcode) is bytes:
-            self.opcode = struct.unpack(">B", opcode)[0]
+    def set_purpose(self, purpose):
+        if type(purpose) is bytes:
+            self.purpose = struct.unpack(">B", purpose)[0]
         else:
-            self.opcode = opcode
+            self.purpose = purpose
 
     def set_destination(self, destination):
         if type(destination) is bytes:
@@ -69,7 +72,7 @@ class Message:
         self.size_of_payload = struct.unpack(">L", size)[0]
 
     def __bool__(self):
-        return self.opcode and self.destination and self.payload
+        return self.purpose and self.payload
     
     def __str__(self):
         string = f"opcode,{Message.opcodes[self.opcode]}:destination,<empty_atm>:size,{self.size_of_payload}"
