@@ -140,6 +140,7 @@ def main():
 
         # ##### interactive, controller mode #####
         elif request == 2:
+            pass
         #     interactive_mode(ser)
         #     # print("Entering interactive mode. Connecting to controller...")
             
