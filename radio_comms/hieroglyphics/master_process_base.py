@@ -11,17 +11,17 @@
 ###################
 
 import serial
-# import re
+import re
 import numpy as np
-# import cv2
-# import time
+import cv2
+import time
 import os
 from collections import deque
 from message import Message
 import struct
 import capture_controls
-# import subprocess
-# import concurrent.futures
+import subprocess
+import concurrent.futures
 
 #p.set_printoptions(threshold=sys.maxsize)
 
@@ -65,9 +65,9 @@ def read_from_port(ser: serial.Serial, messages : list[Message]):
         messages.append(potential_message)
 
 def main():
-    # port = "/dev/tty.usbserial-BG00HO5R"
+    port = "/dev/tty.usbserial-BG00HO5R"
     #port = "/dev/cu.usbserial-B001VC58"
-    port = "COM8"
+    #port = "COM3"
     baud = 57600
     timeout = 0.01
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -100,10 +100,9 @@ def main():
                 b_camleft = struct.pack(">B", camleft)
                 b_camright = struct.pack(">B", camright)
                 payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright
-                print(payload)
 
                 # pack up the message
-                ctrls_msg = Message(purpose=1, payload=payload)
+                ctrls_msg = Message(new=True, purpose=1, payload=payload)
 
                 ser.write(ctrls_msg.get_as_bytes())
 

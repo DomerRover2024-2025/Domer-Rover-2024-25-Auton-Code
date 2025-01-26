@@ -50,6 +50,7 @@ def main():
 
         ##### READ: SERIAL PORT #####
         b_input = ser.read(struct.calcsize(">H"))
+        print("b_input", b_input)
         if len(b_input) != 0:
             potential_message = Message(new=False)
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
