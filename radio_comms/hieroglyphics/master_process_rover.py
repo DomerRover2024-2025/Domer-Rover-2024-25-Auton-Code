@@ -49,7 +49,7 @@ def main():
     while True:
 
         ##### READ: SERIAL PORT #####
-        b_input = ser.read(struct.calcsize(">H"))
+        b_input = ser.read(2)
         print("b_input", b_input)
         if len(b_input) != 0:
             potential_message = Message(new=False)
