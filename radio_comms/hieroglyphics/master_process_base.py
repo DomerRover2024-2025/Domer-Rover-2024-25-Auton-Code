@@ -100,10 +100,10 @@ def main():
                 b_camleft = struct.pack(">B", camleft)
                 b_camright = struct.pack(">B", camright)
                 payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright
-                print(payload)
 
                 # pack up the message
                 ctrls_msg = Message(new=True, purpose=1, payload=payload)
+                print(ctrls_msg.get_as_bytes())
 
                 ser.write(ctrls_msg.get_as_bytes())
 

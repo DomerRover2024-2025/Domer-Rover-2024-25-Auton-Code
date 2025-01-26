@@ -66,7 +66,7 @@ def main():
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
-            print("Message added")
+            print(f"Message added: {potential_message.get_as_bytes()}")
 
     
         ##### READ: IMU? #####
