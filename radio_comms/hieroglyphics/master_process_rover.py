@@ -50,7 +50,6 @@ def main():
 
         ##### READ: SERIAL PORT #####
         b_input = ser.read(2)
-        print("b_input", b_input)
         if len(b_input) != 0:
             potential_message = Message(new=False)
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
@@ -63,7 +62,7 @@ def main():
             payload = b''
             while len(payload) < potential_message.size_of_payload:
                 payload += ser.read(1024)
-            potential_message.set_payload(payload)
+            potential_message.set_payload(payload[:-1])
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
@@ -115,6 +114,7 @@ def process_messages() -> None:
         curr_msg : Message = messages_to_process.popleft()
         log_message(curr_msg)
         if curr_msg.purpose == 1: # indicates DRIVING
+            print("driving message")
             payload = curr_msg.get_payload()
             lspeed = struct.unpack(">f", payload[0:4])[0]
             rspeed = struct.unpack(">f", payload[4:8])[0]

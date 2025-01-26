@@ -74,9 +74,6 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
-    time.sleep(10)
-    ser.readline()
-
     messages = deque()
 
     # the main control
