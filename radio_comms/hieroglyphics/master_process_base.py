@@ -19,6 +19,7 @@ import os
 from collections import deque
 from message import Message
 import struct
+import capture_controls
 import subprocess
 import concurrent.futures
 
@@ -87,17 +88,23 @@ def main():
 
         if request == "dr":
                 # connec to controller?
+            capture_controls.pygame.init()
+            capture_controls.pygame.joystick.init()
+            gen = capture_controls.run({}, 1, False)
 
             while True:
-                pass
-                
-
-                #  actually get the driving info?
+                lspeed, rspeed, scalar, camleft, camright = next(gen)
+                b_lspeed = struct.pack(">f", lspeed)
+                b_rspeed = struct.pack(">f", rspeed)
+                b_scalar = struct.pack(">f", scalar)
+                b_camleft = struct.pack(">B", camleft)
+                b_camright = struct.pack(">B", camright)
+                payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright
 
                 # pack up the message
+                ctrls_msg = Message(purpose=1, payload=payload)
 
-                # give it to the deque that will write it
-                time.sleep(.25)
+                ser.write(ctrls_msg.get_as_bytes())
 
 
 

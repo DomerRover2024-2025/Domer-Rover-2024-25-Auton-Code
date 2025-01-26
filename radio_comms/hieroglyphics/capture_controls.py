@@ -143,6 +143,7 @@ def run(joysticks, triggerMult, stopFlag):
         time.sleep(0.75)
         dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
 
+        yield (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1)
 
         # ************************
         # for 6 wheel individual inputs, add indiv wheel speed variables to publisher, use testController3 arduino code
