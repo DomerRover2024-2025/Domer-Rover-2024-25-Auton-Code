@@ -28,7 +28,7 @@ def main():
     #port = "COM4"
     port = "/dev/ttyTHS1"
     baud = 57600
-    timeout = 0.001
+    timeout = 1
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
@@ -49,9 +49,9 @@ def main():
     while True:
 
         ##### READ: SERIAL PORT #####
-        potential_message = Message(new=False)
         b_input = ser.read(struct.calcsize(">H"))
         if len(b_input) != 0:
+            potential_message = Message(new=False)
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
             potential_message.set_purpose(b_input)
             b_input = ser.read(1)
