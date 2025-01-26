@@ -56,7 +56,7 @@ def main():
             b_input = ser.read(1)
             potential_message.set_purpose(b_input)
             b_input = ser.read(1)
-            potential_message.number = struct.unpack(">B", b_input)
+            potential_message.number = struct.unpack(">B", b_input)[0]
             b_input = ser.read(struct.calcsize(">L"))
             potential_message.set_size(b_input)
             payload = b''
