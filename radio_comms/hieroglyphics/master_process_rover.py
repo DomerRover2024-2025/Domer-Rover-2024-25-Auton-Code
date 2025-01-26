@@ -101,8 +101,8 @@ def log_message(message : Message) -> None:
 
 def process_messages() -> None:
 
-    port_arduino = "/dev/ttyACM0"
-    arduino_ser : serial.Serial = serial.Serial(port_arduino)
+    # port_arduino = "/dev/ttyACM0"
+    # arduino_ser : serial.Serial = serial.Serial(port_arduino)
 
     while True:
         if len(messages_to_process) == 0:
@@ -118,7 +118,8 @@ def process_messages() -> None:
             cam_right = struct.unpack(">B", payload[13])[0]
 
             msg = f"{lspeed} {rspeed}\n"
-            arduino_ser.write(msg.encode())
+            print(msg)
+            #arduino_ser.write(msg.encode())
 
     arduino_ser.close()
 
