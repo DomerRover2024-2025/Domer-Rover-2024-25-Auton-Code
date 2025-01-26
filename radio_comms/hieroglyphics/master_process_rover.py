@@ -39,6 +39,8 @@ def main():
         "position": 1
     }
 
+    ser.write(b'hello world\r\n')
+
     # temporary. to be replaced by a message handler class
     scheduler = Scheduler(ser=ser, topics=topics)
 
