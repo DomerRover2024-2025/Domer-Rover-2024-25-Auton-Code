@@ -43,7 +43,7 @@ def main():
     scheduler = Scheduler(ser=ser, topics=topics)
 
     executor = concurrent.futures.ThreadPoolExecutor(3)
-    future_scheduler = executor.submit(scheduler.send_messages)
+    #future_scheduler = executor.submit(scheduler.send_messages)
     future_msg_process = executor.submit(process_messages)
 
     while True:
@@ -51,7 +51,7 @@ def main():
         ##### READ: SERIAL PORT #####
         potential_message = Message(new=False)
         b_input = ser.read(struct.calcsize(">H"))
-        if len(potential_message) != 0:
+        if len(b_input) != 0:
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
             potential_message.set_purpose(b_input)
             b_input = ser.read(1)
@@ -70,7 +70,7 @@ def main():
         ##### READ: IMU? #####
 
         ##### READ: CAMERA? #####
-        should_capture_image = True
+        should_capture_image = False
         if should_capture_image:
             _, buffer = capture_image()
             image_msg = Message(purpose=2, payload=buffer)
