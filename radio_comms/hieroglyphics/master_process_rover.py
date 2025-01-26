@@ -45,7 +45,7 @@ def main():
     executor = concurrent.futures.ThreadPoolExecutor(3)
     #future_scheduler = executor.submit(scheduler.send_messages)
     future_msg_process = executor.submit(process_messages)
-
+    print("entering while loop")
     while True:
 
         ##### READ: SERIAL PORT #####
@@ -65,6 +65,7 @@ def main():
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
+            print("Message added")
 
     
         ##### READ: IMU? #####
@@ -103,10 +104,12 @@ def process_messages() -> None:
 
     # port_arduino = "/dev/ttyACM0"
     # arduino_ser : serial.Serial = serial.Serial(port_arduino)
+    print("thread activated :)")
 
     while True:
         if len(messages_to_process) == 0:
             continue
+        print("Processing message")
         curr_msg : Message = messages_to_process.popleft()
         log_message(curr_msg)
         if curr_msg.purpose == 1: # indicates DRIVING
