@@ -38,7 +38,7 @@ def main():
         "image": 3,
         "position": 1
     }
-
+    time.sleep(10)
     ser.write(b'hello world\r\n')
 
     # temporary. to be replaced by a message handler class
