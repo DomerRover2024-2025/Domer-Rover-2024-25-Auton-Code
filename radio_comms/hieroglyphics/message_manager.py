@@ -2,7 +2,7 @@ from message import Message
 from collections import deque
 from datetime import datetime
 
-class messageManager:
+class MessageManager:
     def __init__(self, messages=deque()):
         self.messages : deque[Message] = deque(messages)
         self.log_name = "messages.log"
