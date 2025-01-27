@@ -50,8 +50,8 @@ class Message:
         return self.payload
 
     def get_as_bytes(self):
-        if not self:
-            return None
+        # if not self:
+            # return None
         b_id = struct.pack(">H", self.msg_id)
         b_purpose = struct.pack(">B", self.purpose)
         b_number = struct.pack(">B", self.number)
