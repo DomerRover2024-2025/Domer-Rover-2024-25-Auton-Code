@@ -44,14 +44,14 @@ class Message:
             self.msg_id = id
 
     def calculate_checksum(self, payload: str):
-        return bytes(reduce(lambda a,b: a ^ b, payload))
+        return struct.pack(">B", reduce(lambda a,b: a ^ b, payload))
     
     def get_payload(self):
         return self.payload
 
     def get_as_bytes(self):
         # if not self:
-            # return None
+        #     return None
         b_id = struct.pack(">H", self.msg_id)
         b_purpose = struct.pack(">B", self.purpose)
         b_number = struct.pack(">B", self.number)
@@ -82,6 +82,6 @@ class Message:
     
     def __str__(self):
         string = f"ID:{self.msg_id}:purpose,{self.purpose}:destination,<empty_atm>:size,{self.size_of_payload}"
-        #if not self:
-         #   return f"Invalid:{string}"
+        # if not self:
+        #     return f"Invalid:{string}"
         return string
