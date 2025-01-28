@@ -8,7 +8,7 @@ while True:
     ##### READ: SERIAL PORT #####
     b_input = ser.read(1)
     if len(b_input) != 0:
-        print(b_input)
+        print(b_input )
         potential_message = Message(new=False)
         b_input += ser.read(1)
         potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
