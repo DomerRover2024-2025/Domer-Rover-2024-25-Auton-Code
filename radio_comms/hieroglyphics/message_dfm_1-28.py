@@ -18,7 +18,7 @@ class Message:
     def __init__(self, new=True, purpose: int=0, payload : bytes=None):
         if new:
             self.msg_id : int = self.message_count
-            self.message_count += 1
+            Message.message_count += 1
         else:
             self.msg_id : int = -1
         self.purpose : int = purpose
@@ -36,6 +36,7 @@ class Message:
         self.size_of_payload = struct.unpack(">L", bytestring[4:8])[0]
         self.payload = bytestring[8:-1]
         self.checksum = bytestring[-1]
+        print(self.msg_id, self.purpose, self.number, self.size_of_payload, self.payload, self.checksum)
 
     def set_msg_id(self, id):
         if type(id) is bytes:
@@ -82,6 +83,6 @@ class Message:
     
     def __str__(self):
         string = f"ID:{self.msg_id}:purpose,{self.purpose}:destination,<empty_atm>:size,{self.size_of_payload}"
-        #if not self:
-         #   return f"Invalid:{string}"
+        if not self:
+            return f"Invalid:{string}"
         return string
