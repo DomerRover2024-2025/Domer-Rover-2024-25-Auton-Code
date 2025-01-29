@@ -45,6 +45,7 @@ class Scheduler:
     # weighted round robin algorithm?
     # implement with a thread, I think
     def send_messages(self):
+        print("started up the wrr")
         while True:
             for topic in self.topics: # all the topic names
                 c = 0 # packet counter
