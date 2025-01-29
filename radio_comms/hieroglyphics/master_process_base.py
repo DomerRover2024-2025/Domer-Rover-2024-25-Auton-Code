@@ -124,6 +124,11 @@ def main():
                 print(ctrls_msg.get_as_bytes())
 
                 ser.write(ctrls_msg.get_as_bytes())
+        if request == "test":
+            while True:
+                hello = input("enter tester phrase: ")
+                msg = Message(purpose=0, payload=hello.encode())
+                ser.write(msg.get_as_bytes())
 
 
 

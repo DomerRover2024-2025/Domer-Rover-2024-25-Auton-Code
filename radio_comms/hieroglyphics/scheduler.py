@@ -30,6 +30,7 @@ class Scheduler:
         self.topics[topic_name] = wrr_val
         self.messages[topic_name] = deque()
     
+    # TODO bad method do not use
     def sort_message(self, msg : message.Message, opcodes : dict[int, str]):
         opcode = msg.opcode
         self.add_message(opcodes[opcode], msg)
@@ -51,6 +52,7 @@ class Scheduler:
                     curr_msg = self.messages[topic].popleft()
                     self.ser.write(curr_msg.get_as_bytes())
                     c += 1
+                    print("sent message")
 
     # print as a string
     def __str__(self):
