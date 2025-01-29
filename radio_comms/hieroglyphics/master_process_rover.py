@@ -76,8 +76,8 @@ def main():
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
-            print(f"Message added: {potential_message.get_as_bytes()}")
-
+            #print(f"Message added: {potential_message.get_as_bytes()}")
+            print(len(messages_to_process))
     
         ##### READ: IMU? #####
 
@@ -114,7 +114,7 @@ def log_message(message : Message) -> None:
 def process_messages() -> None:
 
     port_arduino = "/dev/ttyACM0"
-    arduino_ser : serial.Serial = serial.Serial(port_arduino)
+    #arduino_ser : serial.Serial = serial.Serial(port_arduino)
     print("thread activated :)")
 
     while True:
@@ -133,7 +133,8 @@ def process_messages() -> None:
             cam_right = struct.unpack(">B", payload[13])[0]
 
             msg = f"{lspeed} {rspeed}\n"
-            arduino_ser.write(msg.encode())
+            print(msg)
+            #arduino_ser.write(msg.encode())
         if curr_msg.purpose == 0: # indicates DEBUGGING
             print("debugging message")
             payload = curr_msg.get_payload()
