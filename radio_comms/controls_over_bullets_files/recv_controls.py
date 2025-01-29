@@ -1,10 +1,9 @@
 import zmq
-import cv2
-import numpy as np
+import struct
 
 ##### CONSTANTS ######
-HOST = "192.168.1.2"
-PORT = 12346
+HOST = "192.168.1.179"
+PORT = 12347
 
 # create subscribe socket
 context = zmq.Context()
@@ -18,15 +17,16 @@ print("connection established")
 
 while True:
     # receive the message (an encoded image)
-    message = socket.recv()
-    if not message:
+    payload = socket.recv()
+    if not payload:
         break
+    lspeed = struct.unpack(">f", payload[0:4])[0]
+    rspeed = struct.unpack(">f", payload[4:8])[0]
+    speed_scalar = struct.unpack(">f", payload[8:12])[0]
+    cam_left = struct.unpack(">B", payload[12])[0]
+    cam_right = struct.unpack(">B", payload[13])[0]
 
-    # decode the image and show it
-    image = np.frombuffer(message, dtype=np.uint8)
-    frame = cv2.imdecode(image, 1)
-    cv2.imshow('frame',frame)
-    cv2.waitKey(1)
+    msg = f"{lspeed} {rspeed}\n"
+    print(msg)
 
-cv2.destroyAllWindows()
 socket.close()

@@ -1,29 +1,32 @@
-import cv2
 import zmq
 import time
+import struct
+import capture_controls
 
 ###### CONSTANTS ######
 HOST = "*"
-PORT = 12346
-QUALITY = 75
-TIME_BETWEEN_FRAMES = 0.05
+PORT = 12347
 
 # create publish socket and video capture object
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-cap = cv2.VideoCapture(0)
+
+capture_controls.pygame.init()
+capture_controls.pygame.joystick.init()
+gen = capture_controls.run({}, 1, False)
 
 # bind the host and port
 socket.bind(f"tcp://{HOST}:{PORT}")
 
 while True:
-    # capture frame; if successful encode it and publish it with quality QUALITY
-    ret, frame = cap.read()
-    if ret:
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), QUALITY]
-        encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
-        socket.send(buffer)
-    time.sleep(TIME_BETWEEN_FRAMES)
-cap.release()
-cv2.destroyAllWindows()
+    lspeed, rspeed, scalar, camleft, camright = next(gen)
+    b_lspeed = struct.pack(">f", lspeed)
+    b_rspeed = struct.pack(">f", rspeed)
+    b_scalar = struct.pack(">f", scalar)
+    b_camleft = struct.pack(">B", camleft)
+    b_camright = struct.pack(">B", camright)
+    payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright
+
+    socket.send(payload)
+    pass
 socket.close()
