@@ -51,7 +51,7 @@ def main():
         ##### READ: SERIAL PORT #####
         b_input = ser.read(1)
         if len(b_input) != 0:
-            print(b_input )
+            #print(b_input )
             potential_message = Message(new=False)
             b_input += ser.read(1)
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
@@ -77,11 +77,10 @@ def main():
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
             #print(f"Message added: {potential_message.get_as_bytes()}")
-            print(len(messages_to_process))
 
-            payload_ack = "msg received! :)"
-            msg_ack = Message(purpose=0, payload=payload_ack.encode())
-            scheduler.add_message("position", msg_ack)
+            #payload_ack = "msg received! :)"
+            #msg_ack = Message(purpose=0, payload=payload_ack.encode())
+            #scheduler.add_message("position", msg_ack)
     
         ##### READ: IMU? #####
 
@@ -124,20 +123,21 @@ def process_messages() -> None:
     while True:
         if len(messages_to_process) == 0:
             continue
-        print("Processing message")
+        print("Processing message", len(messages_to_process))
         curr_msg : Message = messages_to_process.popleft()
         log_message(curr_msg)
         if curr_msg.purpose == 1: # indicates DRIVING
             print("driving message")
             payload = curr_msg.get_payload()
+            print(len(payload))
             lspeed = struct.unpack(">f", payload[0:4])[0]
             rspeed = struct.unpack(">f", payload[4:8])[0]
             speed_scalar = struct.unpack(">f", payload[8:12])[0]
             cam_left = struct.unpack(">B", payload[12])[0]
             cam_right = struct.unpack(">B", payload[13])[0]
 
-            msg = f"{lspeed} {rspeed}\n"
-            print(msg)
+            print(f"{lspeed} {rspeed}")
+
             #arduino_ser.write(msg.encode())
         if curr_msg.purpose == 0: # indicates DEBUGGING
             print("debugging message")
