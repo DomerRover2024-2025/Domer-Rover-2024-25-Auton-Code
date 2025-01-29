@@ -25,6 +25,8 @@ import concurrent.futures
 
 #p.set_printoptions(threshold=sys.maxsize)
 
+messages_from_rover = deque()
+
 #####################
 ##### FUNCTIONS #####
 #####################
@@ -46,23 +48,44 @@ def print_options() -> None:
     print("(wrd) for sending word to arm to type out")
     print("(hbt) Heartbeat mode: Receive coordinates")
 
-def read_from_port(ser: serial.Serial, messages : list[Message]):
+def read_from_port(ser: serial.Serial):
 ##### READ FROM THE SERIAL PORT
-    ##### TODO this should be threaded, I think
-    potential_message = Message()
-    b_input = ser.read(1)
-    if len(potential_message) != 0:
-        potential_message.set_opcode(b_input)
+    while True:
         b_input = ser.read(1)
-        potential_message.set_destination(b_input)
-        b_input = ser.read(struct.calcsize(">L"))
-        potential_message.set_size(b_input)
-        payload = b''
-        while len(payload) < potential_message.size_of_payload:
-            payload += ser.read(1024)
+        if len(b_input) != 0:
+            print(b_input )
+            potential_message = Message(new=False)
+            b_input += ser.read(1)
+            potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
+            b_input = ser.read(1)
+            potential_message.set_purpose(b_input)
+            b_input = ser.read(1)
+            potential_message.number = struct.unpack(">B", b_input)[0]
+            b_input = ser.read(struct.calcsize(">L"))
+            potential_message.set_size(b_input)
+            payload = b''
+            # print(potential_message.size_of_payload)
+            while len(payload) < potential_message.size_of_payload:
+                payload += ser.read(potential_message.size_of_payload - len(payload))
+            # print(len(payload))
+            potential_message.set_payload(payload)
+            potential_message.checksum = ser.read(1)
 
-        # TODO replace with a message manager
-        messages.append(potential_message)
+            messages_from_rover.append(potential_message)
+
+def process_messages() -> None:
+
+    print("thread activated :)")
+    while True:
+        if len(messages_from_rover) == 0:
+            continue
+        print("Processing message")
+        curr_msg : Message = messages_from_rover.popleft()
+
+        if curr_msg.purpose == 0: # indicates DEBUGGING
+            print("debugging message")
+            payload = curr_msg.get_payload()
+            print(payload.decode())
 
 def main():
     #port = "/dev/tty.usbserial-BG00HO5R"
@@ -74,7 +97,9 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
-    messages = deque()
+    executor = concurrent.futures.ThreadPoolExecutor(3)
+    future = executor.submit(process_messages)
+    future = executor.submit(read_from_port, ser)
 
     # the main control
     while True:
@@ -106,6 +131,11 @@ def main():
                 print(ctrls_msg.get_as_bytes())
 
                 ser.write(ctrls_msg.get_as_bytes())
+        if request == "test":
+            while True:
+                hello = input("enter tester phrase: ")
+                msg = Message(purpose=0, payload=hello.encode())
+                ser.write(msg.get_as_bytes())
 
 
 

@@ -43,7 +43,7 @@ def main():
     scheduler = Scheduler(ser=ser, topics=topics)
 
     executor = concurrent.futures.ThreadPoolExecutor(3)
-    #future_scheduler = executor.submit(scheduler.send_messages)
+    future_scheduler = executor.submit(scheduler.send_messages)
     future_msg_process = executor.submit(process_messages)
     print("entering while loop")
     while True:
@@ -62,10 +62,10 @@ def main():
             b_input = ser.read(struct.calcsize(">L"))
             potential_message.set_size(b_input)
             payload = b''
-            print(potential_message.size_of_payload)
+            # print(potential_message.size_of_payload)
             while len(payload) < potential_message.size_of_payload:
                 payload += ser.read(potential_message.size_of_payload - len(payload))
-            print(len(payload))
+            # print(len(payload))
             potential_message.set_payload(payload)
             potential_message.checksum = ser.read(1)
             
@@ -76,8 +76,12 @@ def main():
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
-            print(f"Message added: {potential_message.get_as_bytes()}")
+            #print(f"Message added: {potential_message.get_as_bytes()}")
+            print(len(messages_to_process))
 
+            payload_ack = "msg received! :)"
+            msg_ack = Message(purpose=0, payload=payload_ack.encode())
+            scheduler.add_message("position", msg_ack)
     
         ##### READ: IMU? #####
 
@@ -113,8 +117,8 @@ def log_message(message : Message) -> None:
 
 def process_messages() -> None:
 
-    # port_arduino = "/dev/ttyACM0"
-    # arduino_ser : serial.Serial = serial.Serial(port_arduino)
+    port_arduino = "/dev/ttyACM0"
+    #arduino_ser : serial.Serial = serial.Serial(port_arduino)
     print("thread activated :)")
 
     while True:
@@ -135,6 +139,10 @@ def process_messages() -> None:
             msg = f"{lspeed} {rspeed}\n"
             print(msg)
             #arduino_ser.write(msg.encode())
+        if curr_msg.purpose == 0: # indicates DEBUGGING
+            print("debugging message")
+            payload = curr_msg.get_payload()
+            print(payload.decode())
 
     arduino_ser.close()
 
