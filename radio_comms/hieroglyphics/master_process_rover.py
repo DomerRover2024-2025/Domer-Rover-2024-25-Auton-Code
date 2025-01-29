@@ -43,7 +43,7 @@ def main():
     scheduler = Scheduler(ser=ser, topics=topics)
 
     executor = concurrent.futures.ThreadPoolExecutor(3)
-    #future_scheduler = executor.submit(scheduler.send_messages)
+    future_scheduler = executor.submit(scheduler.send_messages)
     future_msg_process = executor.submit(process_messages)
     print("entering while loop")
     while True:
@@ -78,6 +78,10 @@ def main():
             messages_to_process.append(potential_message)
             #print(f"Message added: {potential_message.get_as_bytes()}")
             print(len(messages_to_process))
+
+            payload_ack = "msg received! :)"
+            msg_ack = Message(purpose=0, payload=payload_ack.encode())
+            scheduler.add_message("position", msg_ack)
     
         ##### READ: IMU? #####
 

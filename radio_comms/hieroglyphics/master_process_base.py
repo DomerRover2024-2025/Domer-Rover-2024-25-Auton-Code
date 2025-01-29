@@ -25,6 +25,8 @@ import concurrent.futures
 
 #p.set_printoptions(threshold=sys.maxsize)
 
+messages_from_rover = deque()
+
 #####################
 ##### FUNCTIONS #####
 #####################
@@ -64,6 +66,21 @@ def read_from_port(ser: serial.Serial, messages : list[Message]):
         # TODO replace with a message manager
         messages.append(potential_message)
 
+def process_messages() -> None:
+
+    print("thread activated :)")
+
+    while True:
+        if len(messages_from_rover) == 0:
+            continue
+        print("Processing message")
+        curr_msg : Message = messages_from_rover.popleft()
+
+        if curr_msg.purpose == 0: # indicates DEBUGGING
+            print("debugging message")
+            payload = curr_msg.get_payload()
+            print(payload.decode())
+
 def main():
     #port = "/dev/tty.usbserial-BG00HO5R"
     port = "/dev/cu.usbserial-B001VC58"
@@ -74,7 +91,8 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
-    messages = deque()
+    executor = concurrent.futures.ThreadPoolExecutor(2)
+    future = executor.submit(process_messages)
 
     # the main control
     while True:
