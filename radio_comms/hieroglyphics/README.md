@@ -7,4 +7,7 @@ TODO:
 - figure out opcode documentation / where everything must go
 - figure out all the metadata that should be associated with a given message.
     - more annoying than it seems; do I need an opcode vs destination?
-    
+- rover requesting messages with failed checksums by their ids
+    - eg. for one image keep all packets for that image in memory to be requested 
+      if a couple of the packets are faulty
+- update checksum algorithm

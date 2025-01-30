@@ -85,3 +85,25 @@ class Message:
         # if not self:
         #     return f"Invalid:{string}"
         return string
+    
+    def message_split(bytestring : bytes):
+        size = struct.unpack(">L", bytestring[4:8])[0]
+        current_b = 8
+        number : int = 1
+        b_size = struct.pack(">L", 8192)
+        message_list = []
+        
+        while current_b + 8192 < 8 + size:
+            b_num = struct.pack(">B", number)
+
+            message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:current_b+8192] + bytestring[-1]
+
+            number += 1
+            current_b += 8192
+
+        remaining = size % 8192
+        b_size = struct.pack(">L", remaining)
+        b_num = struct.pack(">B", number)
+
+        message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:-1] + bytestring[-1]
+        return message_list
