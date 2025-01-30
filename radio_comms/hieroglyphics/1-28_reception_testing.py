@@ -2,7 +2,7 @@ import serial
 import struct
 from message import Message
 
-ser = serial.Serial('COM4', baudrate=57600, timeout=0.1)
+ser = serial.Serial('/dev/ttyTHS1', baudrate=57600, timeout=0.1)
 
 while True:
     ##### READ: SERIAL PORT #####
@@ -28,4 +28,4 @@ while True:
         
         print(potential_message)
         print(potential_message.get_as_bytes())
-        print("Payload decoded: ", potential_message.get_payload().decode())
+        #print("Payload decoded: ", potential_message.get_payload().decode())

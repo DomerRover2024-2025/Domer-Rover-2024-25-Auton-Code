@@ -28,7 +28,7 @@ def main():
     #port = "COM4"
     port = "/dev/ttyTHS1"
     baud = 57600
-    timeout = 1
+    timeout = 0.1
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
@@ -70,7 +70,7 @@ def main():
             potential_message.checksum = ser.read(1)
             
             # print(potential_message)
-            # print(potential_message.get_as_bytes())
+            print(potential_message.get_as_bytes())
             # print("Payload decoded: ", potential_message.get_payload().decode())
         
 
@@ -133,8 +133,8 @@ def process_messages() -> None:
             lspeed = struct.unpack(">f", payload[0:4])[0]
             rspeed = struct.unpack(">f", payload[4:8])[0]
             speed_scalar = struct.unpack(">f", payload[8:12])[0]
-            cam_left = struct.unpack(">B", payload[12])[0]
-            cam_right = struct.unpack(">B", payload[13])[0]
+            cam_left = struct.unpack(">B", payload[12:13])[0]
+            cam_right = struct.unpack(">B", payload[13:14])[0]
 
             print(f"{lspeed} {rspeed}")
 
