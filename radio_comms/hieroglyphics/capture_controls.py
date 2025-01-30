@@ -65,7 +65,7 @@ def sendDriveSignals(left, right):
     return dutyCycleLeft, dutyCycleRight
 
 def run(joysticks, triggerMult, stopFlag):
-    
+
     done = False
     while not done:
         for event in pygame.event.get():
@@ -84,7 +84,8 @@ def run(joysticks, triggerMult, stopFlag):
         if not joysticks:
             print("No joystick connected. Waiting...")
             time.sleep(3)
-            continue
+            return
+            #TODO add back continue
         # joystick 1 sets joystick buttons / axis to values
 
         if 0 in joysticks:
@@ -112,7 +113,7 @@ def run(joysticks, triggerMult, stopFlag):
 
         b_padUp1 = joysticks[0].get_button(11)
         b_padDown1= joysticks[0].get_button(12)
-        b_padLeft1 = joysticks[0].get_button(13)
+        #b_padLeft1 = joysticks[0].get_button(13)
         # b_padRight1 = joysticks[0].get_button(14)
 
         # b_touchpad1 = joysticks[0].get_button(15)
@@ -124,12 +125,12 @@ def run(joysticks, triggerMult, stopFlag):
         
         triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x for speed scalar
         
-        if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
-            pass
-        if b_padDown1 == 1:
-            pass
-        if b_padLeft1 == 1:
-            pass
+        # if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
+        #     pass
+        # if b_padDown1 == 1:
+        #     pass
+        # if b_padLeft1 == 1:
+        #     pass
         # if b_padRight1 == 1:
         #     pass
         
@@ -143,7 +144,7 @@ def run(joysticks, triggerMult, stopFlag):
         time.sleep(0.75)
         dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
 
-        yield (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1)
+        return (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1)
 
         # ************************
         # for 6 wheel individual inputs, add indiv wheel speed variables to publisher, use testController3 arduino code
