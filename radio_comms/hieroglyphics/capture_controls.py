@@ -67,84 +67,84 @@ def sendDriveSignals(left, right):
 def run(joysticks, triggerMult, stopFlag):
 
     done = False
-    #while not done:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
 
-        if event.type == pygame.JOYDEVICEADDED:
-            joy = pygame.joystick.Joystick(event.device_index)
-            joysticks[joy.get_instance_id()] = joy
-            print(f"Joystick {joy.get_instance_id()} connencted")
+            if event.type == pygame.JOYDEVICEADDED:
+                joy = pygame.joystick.Joystick(event.device_index)
+                joysticks[joy.get_instance_id()] = joy
+                print(f"Joystick {joy.get_instance_id()} connencted")
 
-        if event.type == pygame.JOYDEVICEREMOVED:
-            del joysticks[event.instance_id]
-            print(f"Joystick {event.instance_id} disconnected")
+            if event.type == pygame.JOYDEVICEREMOVED:
+                del joysticks[event.instance_id]
+                print(f"Joystick {event.instance_id} disconnected")
 
-    if not joysticks:
-        print("No joystick connected. Waiting...")
-        time.sleep(3)
-        return
-        #TODO add back continue
-    # joystick 1 sets joystick buttons / axis to values
+        if not joysticks:
+            print("No joystick connected. Waiting...")
+            time.sleep(3)
+            return
+            #TODO add back continue
+        # joystick 1 sets joystick buttons / axis to values
 
-    if 0 in joysticks:
-        guid = joysticks[0].get_guid()
+        if 0 in joysticks:
+            guid = joysticks[0].get_guid()
 
-    a_lt1 = deadzone(joysticks[0].get_axis(4) + 1)
-    a_rt1 = deadzone(joysticks[0].get_axis(5) + 1)
-    
-    b_lbumper1 = joysticks[0].get_button(9)
-    b_rbumper1 = joysticks[0].get_button(10)
-
-    a_leftx1 = deadzone(joysticks[0].get_axis(0))
-    a_lefty1 =  deadzone(joysticks[0].get_axis(1) * -1)
-
-    a_rightx1 = deadzone(joysticks[0].get_axis(2))
-    a_righty1 =  deadzone(joysticks[0].get_axis(3) * -1)
-
-    b_leftIn1 = joysticks[0].get_button(7)
-    b_rightIn1 = joysticks[0].get_button(8)
-
-    b_x1 = joysticks[0].get_button(0)
-    b_circle1 = joysticks[0].get_button(1)
-    b_square1 = joysticks[0].get_button(2)
-    b_triangle1 = joysticks[0].get_button(3)
-
-    b_padUp1 = joysticks[0].get_button(11)
-    b_padDown1= joysticks[0].get_button(12)
-    b_padLeft1 = joysticks[0].get_button(13)
-    # b_padRight1 = joysticks[0].get_button(14)
-
-    # b_touchpad1 = joysticks[0].get_button(15)
-
-    mag, angle = cart2pol(a_leftx1, a_lefty1)
-    angleRads = math.radians(angle)
-
-    triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
-    
-    triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x for speed scalar
-    
-    if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
-        pass
-    if b_padDown1 == 1:
-        pass
-    if b_padLeft1 == 1:
-        pass
-    # if b_padRight1 == 1:
-    #     pass
-    
-    left_power, right_power = calcWheelSpeeds(mag, angle)
-    if b_leftIn1 == 1 and stopFlag == False:
-        stopFlag = True
+        a_lt1 = deadzone(joysticks[0].get_axis(4) + 1)
+        a_rt1 = deadzone(joysticks[0].get_axis(5) + 1)
         
-    if stopFlag == True:
-        left_power, right_power = 0, 0
-    
-    time.sleep(0.75)
-    dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
+        b_lbumper1 = joysticks[0].get_button(9)
+        b_rbumper1 = joysticks[0].get_button(10)
 
-    return (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1)
+        a_leftx1 = deadzone(joysticks[0].get_axis(0))
+        a_lefty1 =  deadzone(joysticks[0].get_axis(1) * -1)
+
+        a_rightx1 = deadzone(joysticks[0].get_axis(2))
+        a_righty1 =  deadzone(joysticks[0].get_axis(3) * -1)
+
+        b_leftIn1 = joysticks[0].get_button(7)
+        b_rightIn1 = joysticks[0].get_button(8)
+
+        b_x1 = joysticks[0].get_button(0)
+        b_circle1 = joysticks[0].get_button(1)
+        b_square1 = joysticks[0].get_button(2)
+        b_triangle1 = joysticks[0].get_button(3)
+
+        b_padUp1 = joysticks[0].get_button(11)
+        b_padDown1= joysticks[0].get_button(12)
+        #b_padLeft1 = joysticks[0].get_button(13)
+        # b_padRight1 = joysticks[0].get_button(14)
+
+        # b_touchpad1 = joysticks[0].get_button(15)
+
+        mag, angle = cart2pol(a_leftx1, a_lefty1)
+        angleRads = math.radians(angle)
+
+        triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
+        
+        triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x for speed scalar
+        
+        # if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
+        #     pass
+        # if b_padDown1 == 1:
+        #     pass
+        # if b_padLeft1 == 1:
+        #     pass
+        # if b_padRight1 == 1:
+        #     pass
+        
+        left_power, right_power = calcWheelSpeeds(mag, angle)
+        if b_leftIn1 == 1 and stopFlag == False:
+            stopFlag = True
+            
+        if stopFlag == True:
+            left_power, right_power = 0, 0
+        
+        time.sleep(0.75)
+        dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
+
+        return (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1)
 
         # ************************
         # for 6 wheel individual inputs, add indiv wheel speed variables to publisher, use testController3 arduino code
