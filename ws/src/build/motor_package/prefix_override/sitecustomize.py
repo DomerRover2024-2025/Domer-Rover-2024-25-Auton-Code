@@ -1,4 +1,4 @@
 import sys
 if sys.prefix == '/usr':
     sys.real_prefix = sys.prefix
-    sys.prefix = sys.exec_prefix = '/home/domerrover/ws/src/install/motor_package'
+    sys.prefix = sys.exec_prefix = '/home/domerrover/Domer-Rover-2024-25-Auton-Code/ws/src/install/motor_package'
