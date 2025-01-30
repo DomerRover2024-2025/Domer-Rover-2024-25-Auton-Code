@@ -115,10 +115,10 @@ def main():
                 # connec to controller?
             capture_controls.pygame.init()
             capture_controls.pygame.joystick.init()
-            gen = capture_controls.run({}, 1, False)
+            #gen = 
 
             while True:
-                lspeed, rspeed, scalar, camleft, camright = next(gen)
+                lspeed, rspeed, scalar, camleft, camright = capture_controls.run({}, 1, False)
                 b_lspeed = struct.pack(">f", lspeed)
                 b_rspeed = struct.pack(">f", rspeed)
                 b_scalar = struct.pack(">f", scalar)
