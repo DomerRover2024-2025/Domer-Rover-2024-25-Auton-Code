@@ -2,7 +2,7 @@ import zmq
 import struct
 
 ##### CONSTANTS ######
-HOST = "192.168.1.179"
+HOST = "localhost"
 PORT = 12347
 
 # create subscribe socket
@@ -23,8 +23,8 @@ while True:
     lspeed = struct.unpack(">f", payload[0:4])[0]
     rspeed = struct.unpack(">f", payload[4:8])[0]
     speed_scalar = struct.unpack(">f", payload[8:12])[0]
-    cam_left = struct.unpack(">B", payload[12])[0]
-    cam_right = struct.unpack(">B", payload[13])[0]
+    cam_left = struct.unpack(">B", payload[12:13])[0]
+    cam_right = struct.unpack(">B", payload[13:14])[0]
 
     msg = f"{lspeed} {rspeed}\n"
     print(msg)

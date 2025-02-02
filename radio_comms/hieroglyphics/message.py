@@ -58,8 +58,8 @@ class Message:
         b_size = struct.pack(">L", self.size_of_payload)
         return b_id + b_purpose + b_number + b_size + self.payload + self.checksum
 
-    def get_total_size(self):
-        return struct.calcsize(self.purpose)
+    # def get_total_size(self):
+    #     return struct.calcsize(self.purpose)
     
     def set_purpose(self, purpose):
         if type(purpose) is bytes:
@@ -78,12 +78,12 @@ class Message:
         self.size_of_payload = struct.unpack(">L", size)[0]
 
     def __bool__(self):
-        return self.purpose and self.payload
+        return (self.purpose is not None) and (self.payload is not None)
     
     def __str__(self):
-        string = f"ID:{self.msg_id}:purpose,{self.purpose}:destination,<empty_atm>:size,{self.size_of_payload}"
-        # if not self:
-        #     return f"Invalid:{string}"
+        string = f"ID,{self.msg_id}:purpose,{self.purpose}:number,{self.number}:size,{self.size_of_payload}"
+        if not self:
+            string = f"INVALID|{string}"
         return string
     
     def message_split(bytestring : bytes):
