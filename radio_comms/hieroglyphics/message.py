@@ -2,6 +2,7 @@ from functools import reduce
 import serial
 import struct
 import sys
+from datetime import datetime
 
 ### MESSAGE STRUCTURE:
     # UID: 2 BYTES?
@@ -86,6 +87,11 @@ class Message:
             string = f"INVALID|{string}"
         return string
     
+    @staticmethod
+    def log_message(msg : 'Message', filename : str):
+        with open(filename, 'a') as f:
+            f.write(f"TIMESTAMP,{datetime.now()}|{msg}\n")
+
     @staticmethod
     def message_split(big_payload : bytearray, purpose_for_all : int):
         MAX_SIZE = 8192

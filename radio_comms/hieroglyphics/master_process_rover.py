@@ -11,14 +11,13 @@ import sys
 import struct
 import numpy as np
 import concurrent.futures
-import time
 from message import Message
 from scheduler import Scheduler
 from collections import deque
 from datetime import datetime
 #np.set_printoptions(threshold=sys.maxsize)
 
-msg_log = "messages.log"
+MSG_LOG = "messages_rover.log"
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
 
@@ -92,6 +91,18 @@ def main():
 
         ##### READ: ARM? #####
 
+def save_and_output_image(buffer : bytearray, type : str) -> bool:
+    try:
+        image = np.frombuffer(buffer, dtype=np.uint8)
+        frame = cv2.imdecode(image, 1)
+        cv2.imwrite(f"{type}/{datetime.now()}.jpg", frame)
+        cv2.imshow(f'{type}', frame)
+    #print("Image received and shown.")
+        cv2.waitKey(1)
+        return True
+    except:
+        return False
+
 def capture_image() -> tuple[int, bytearray]:
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
@@ -109,10 +120,6 @@ def capture_image() -> tuple[int, bytearray]:
     #size_packed = struct.pack(">L", size_of_data)
     return size_of_data, buffer
 
-def log_message(message : Message) -> None:
-    with open(msg_log, "a") as f:
-        f.write(f"{message}:TIMESTAMP-{datetime.now()}")
-
 def process_messages() -> None:
 
     port_arduino = "/dev/ttyACM0"
@@ -124,7 +131,7 @@ def process_messages() -> None:
             continue
         print("Processing message", len(messages_to_process))
         curr_msg : Message = messages_to_process.popleft()
-        log_message(curr_msg)
+        Message.log_message(curr_msg, MSG_LOG)
         if curr_msg.purpose == 1: # indicates DRIVING
             print("driving message")
             payload = curr_msg.get_payload()

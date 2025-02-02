@@ -22,10 +22,78 @@ import struct
 import capture_controls
 import subprocess
 import concurrent.futures
+from datetime import datetime
 
-#p.set_printoptions(threshold=sys.maxsize)
+#######################
+##### GLOBAL VARS #####
+#######################
 
 messages_from_rover = deque()
+MSG_LOG = "messages_base.log"
+
+################
+##### MAIN #####
+################
+
+def main():
+    #port = "/dev/tty.usbserial-BG00HO5R"
+    port = "/dev/cu.usbserial-B001VC58"
+    #port = "COM8"
+    baud = 57600
+    timeout = 0.01
+    ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+
+    executor = concurrent.futures.ThreadPoolExecutor(3)
+    future = executor.submit(process_messages)
+    future = executor.submit(read_from_port, ser)
+
+    # the main control
+    while True:
+        print_options()
+        request = input(">> ")
+        
+        if request == 'quit':
+            exit_main()
+            return 0
+
+        # this request is for debugging, and prints the remaining contents
+        # of the buffer into a file
+        if request == 'log':
+            tail_output = subprocess.run(["tail", '-n', 10, MSG_LOG], capture_output=True, text=True)
+            print(tail_output.stdout)
+
+        elif request == "dr":
+                # connec to controller?
+            capture_controls.pygame.init()
+            capture_controls.pygame.joystick.init()
+            gen = capture_controls.run({}, 1, False)
+
+            while True:
+                lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
+                b_lspeed = struct.pack(">f", lspeed)
+                b_rspeed = struct.pack(">f", rspeed)
+                b_scalar = struct.pack(">f", scalar)
+                b_camleft = struct.pack(">B", camleft)
+                b_camright = struct.pack(">B", camright)
+                b_button_x = struct.pack(">B", camright)
+                b_button_y = struct.pack(">B", camright)
+                payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
+
+                # pack up the message
+                ctrls_msg = Message(new=True, purpose=1, payload=payload)
+                print(ctrls_msg.get_as_bytes())
+
+                ser.write(ctrls_msg.get_as_bytes())
+
+        elif request == "test":
+            while True:
+                hello = input("enter tester phrase, exit to exit: ")
+                if hello == "exit":
+                    break
+                msg = Message(purpose=0, payload=hello.encode())
+                ser.write(msg.get_as_bytes())
 
 #####################
 ##### FUNCTIONS #####
@@ -35,7 +103,7 @@ def print_options() -> None:
     print("----------------")
     print("MENU OF CONTROLS")
     print("----------------")
-    print("(q) to quit")
+    print("(quit) to quit")
     print("(log) get most recent 10 msgs of the log")
     print("(ldp) for LD photo")
     print("(hdp) for HD photo")
@@ -47,6 +115,8 @@ def print_options() -> None:
 
     print("(wrd) for sending word to arm to type out")
     print("(hbt) Heartbeat mode: Receive coordinates")
+    print("(test) Send over tester strings for debugging purposes")
+    print("(menu) See menu options again")
 
 def read_from_port(ser: serial.Serial):
 ##### READ FROM THE SERIAL PORT
@@ -76,68 +146,51 @@ def read_from_port(ser: serial.Serial):
 def process_messages() -> None:
 
     print("thread activated :)")
+
+    current_video_feed_str = b''
+    current_video_feed_num = 0
+
     while True:
         if len(messages_from_rover) == 0:
             continue
-        print("Processing message")
         curr_msg : Message = messages_from_rover.popleft()
 
+        if curr_msg.purpose == 2: # indicates "HEARTBEAT / position"
+            pass
+
+        if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
+            if current_video_feed_num < curr_msg.number:
+                current_video_feed_str += curr_msg.get_payload()
+                current_video_feed_num += 1
+            else:
+                current_video_feed_num = 0
+                save_and_output_image(current_video_feed_str, "vid_feed")
+                current_video_feed_str = curr_msg.get_payload()
+
+        if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
+            pass
+
         if curr_msg.purpose == 0: # indicates DEBUGGING
-            print("debugging message")
             payload = curr_msg.get_payload()
             print(payload.decode())
 
-def main():
-    #port = "/dev/tty.usbserial-BG00HO5R"
-    port = "/dev/cu.usbserial-B001VC58"
-    #port = "COM8"
-    baud = 57600
-    timeout = 0.01
-    ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+def save_and_output_image(buffer : bytearray, type : str) -> bool:
+    try:
+        image = np.frombuffer(buffer, dtype=np.uint8)
+        frame = cv2.imdecode(image, 1)
+        cv2.imwrite(f"{type}/{datetime.now()}.jpg", frame)
+        cv2.imshow(f'{type}', frame)
+    #print("Image received and shown.")
+        cv2.waitKey(1)
+        return True
+    except:
+        return False
 
-    executor = concurrent.futures.ThreadPoolExecutor(3)
-    future = executor.submit(process_messages)
-    future = executor.submit(read_from_port, ser)
+# everything to do on shutdown
+def exit_main(executor : concurrent.futures.ThreadPoolExecutor):
+    executor.shutdown()
 
-    # the main control
-    while True:
-        print_options()
-        request = input(">> ")
-        
-        # this request is for debugging, and prints the remaining contents
-        # of the buffer into a file
-        if request == 'log':
-            pass
 
-        if request == "dr":
-                # connec to controller?
-            capture_controls.pygame.init()
-            capture_controls.pygame.joystick.init()
-            gen = capture_controls.run({}, 1, False)
-
-            while True:
-                lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
-                b_lspeed = struct.pack(">f", lspeed)
-                b_rspeed = struct.pack(">f", rspeed)
-                b_scalar = struct.pack(">f", scalar)
-                b_camleft = struct.pack(">B", camleft)
-                b_camright = struct.pack(">B", camright)
-                b_button_x = struct.pack(">B", camright)
-                b_button_y = struct.pack(">B", camright)
-                payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
-
-                # pack up the message
-                ctrls_msg = Message(new=True, purpose=1, payload=payload)
-                print(ctrls_msg.get_as_bytes())
-
-                ser.write(ctrls_msg.get_as_bytes())
-        if request == "test":
-            while True:
-                hello = input("enter tester phrase: ")
-                msg = Message(purpose=0, payload=hello.encode())
-                ser.write(msg.get_as_bytes())
 
 
 
