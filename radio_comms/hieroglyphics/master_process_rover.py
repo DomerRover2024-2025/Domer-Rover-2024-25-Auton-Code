@@ -91,18 +91,6 @@ def main():
 
         ##### READ: ARM? #####
 
-def save_and_output_image(buffer : bytearray, type : str) -> bool:
-    try:
-        image = np.frombuffer(buffer, dtype=np.uint8)
-        frame = cv2.imdecode(image, 1)
-        cv2.imwrite(f"{type}/{datetime.now()}.jpg", frame)
-        cv2.imshow(f'{type}', frame)
-    #print("Image received and shown.")
-        cv2.waitKey(1)
-        return True
-    except:
-        return False
-
 def capture_image() -> tuple[int, bytearray]:
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()

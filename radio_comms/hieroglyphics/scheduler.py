@@ -29,11 +29,6 @@ class Scheduler:
     def add_topic(self, topic_name, wrr_val) -> None:
         self.topics[topic_name] = wrr_val
         self.messages[topic_name] = deque()
-    
-    # TODO bad method do not use
-    def sort_message(self, msg : message.Message, opcodes : dict[int, str]) -> None:
-        opcode = msg.opcode
-        self.add_message(opcodes[opcode], msg)
 
     # add message to a given "topic"
     # I call this a "topic" but it's probably called a "server" for an actual wrr
