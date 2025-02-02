@@ -26,21 +26,26 @@ class Scheduler:
     # wrr = weighted round robin value
     # aka: how many messages of THIS one to send
     #      for every wrr value of other topics
-    def add_topic(self, topic_name, wrr_val):
+    def add_topic(self, topic_name, wrr_val) -> None:
         self.topics[topic_name] = wrr_val
         self.messages[topic_name] = deque()
     
     # TODO bad method do not use
-    def sort_message(self, msg : message.Message, opcodes : dict[int, str]):
+    def sort_message(self, msg : message.Message, opcodes : dict[int, str]) -> None:
         opcode = msg.opcode
         self.add_message(opcodes[opcode], msg)
 
     # add message to a given "topic"
     # I call this a "topic" but it's probably called a "server" for an actual wrr
-    def add_message(self, topic_name, msg : message.Message):
+    def add_single_message(self, topic_name, msg : message.Message) -> None:
         if topic_name not in self.messages:
             raise IndexError
         self.messages[topic_name].append(msg)
+    
+    def add_list_of_messages(self, topic_name, lst_of_msgs : list[message.Message]) -> None:
+        if topic_name not in self.messages:
+            raise IndexError
+        self.messages[topic_name] += lst_of_msgs
 
     # weighted round robin algorithm?
     # implement with a thread, I think
@@ -56,7 +61,7 @@ class Scheduler:
                     print("sent message")
 
     # print as a string
-    def __str__(self):
+    def __str__(self) -> str:
         ret_str = ""
         for topic in self.topics:
             ret_str =f'{ret_str}:name={topic},wrr={self.topics[topic]},num_msg={len(self.messages[topic])}'

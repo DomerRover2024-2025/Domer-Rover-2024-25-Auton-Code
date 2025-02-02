@@ -115,16 +115,18 @@ def main():
                 # connec to controller?
             capture_controls.pygame.init()
             capture_controls.pygame.joystick.init()
-            #gen = 
+            gen = capture_controls.run({}, 1, False)
 
             while True:
-                lspeed, rspeed, scalar, camleft, camright = capture_controls.run({}, 1, False)
+                lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
                 b_lspeed = struct.pack(">f", lspeed)
                 b_rspeed = struct.pack(">f", rspeed)
                 b_scalar = struct.pack(">f", scalar)
                 b_camleft = struct.pack(">B", camleft)
                 b_camright = struct.pack(">B", camright)
-                payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright
+                b_button_x = struct.pack(">B", camright)
+                b_button_y = struct.pack(">B", camright)
+                payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
 
                 # pack up the message
                 ctrls_msg = Message(new=True, purpose=1, payload=payload)

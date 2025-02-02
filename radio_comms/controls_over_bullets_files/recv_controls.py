@@ -13,7 +13,7 @@ socket = context.socket(zmq.SUB)
 socket.connect(f"tcp://{HOST}:{PORT}")
 socket.subscribe("") # subscribe to everything
 
-print("connection established")
+print("connection open")
 
 while True:
     # receive the message (an encoded image)
@@ -25,6 +25,8 @@ while True:
     speed_scalar = struct.unpack(">f", payload[8:12])[0]
     cam_left = struct.unpack(">B", payload[12:13])[0]
     cam_right = struct.unpack(">B", payload[13:14])[0]
+    button_x = struct.unpack(">B", payload[14:15])[0]
+    button_y = struct.unpack(">B", payload[15:16])[0]
 
     msg = f"{lspeed} {rspeed}\n"
     print(msg)

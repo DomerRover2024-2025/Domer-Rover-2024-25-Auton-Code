@@ -80,7 +80,7 @@ def main():
 
             #payload_ack = "msg received! :)"
             #msg_ack = Message(purpose=0, payload=payload_ack.encode())
-            #scheduler.add_message("position", msg_ack)
+            #scheduler.add_single_message("position", msg_ack)
     
         ##### READ: IMU? #####
 
@@ -88,8 +88,7 @@ def main():
         should_capture_image = False
         if should_capture_image:
             _, buffer = capture_image()
-            image_msg = Message(purpose=2, payload=buffer)
-            scheduler.sort_message(image_msg, "image")
+            scheduler.add_list_of_messages("image", Message.message_split(big_payload=buffer, purpose_for_all=2))
 
         ##### READ: ARM? #####
 
@@ -135,6 +134,8 @@ def process_messages() -> None:
             speed_scalar = struct.unpack(">f", payload[8:12])[0]
             cam_left = struct.unpack(">B", payload[12:13])[0]
             cam_right = struct.unpack(">B", payload[13:14])[0]
+            button_x = struct.unpack(">B", payload[14:15])[0]
+            button_y = struct.unpack(">B", payload[15:16])[0]
 
             print(f"{lspeed} {rspeed}")
 

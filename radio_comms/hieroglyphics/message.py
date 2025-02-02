@@ -15,14 +15,14 @@ class Message:
 
     # I am necessitating that the payload ALREADY BE a byte object.
     # I do not know how big it is.
-    def __init__(self, new=True, purpose: int=0, payload : bytes=None):
+    def __init__(self, new=True, purpose: int=0, payload : bytes=None, number : int=0):
         if new:
-            self.msg_id : int = self.message_count
-            self.message_count += 1
+            self.msg_id : int = Message.message_count
+            Message.message_count += 1
         else:
             self.msg_id : int = -1
         self.purpose : int = purpose
-        self.number : int = 0
+        self.number : int = number
         self.payload : bytes = payload
         if payload:
             self.size_of_payload : int = len(payload)
@@ -86,24 +86,31 @@ class Message:
             string = f"INVALID|{string}"
         return string
     
-    def message_split(bytestring : bytes):
-        size = struct.unpack(">L", bytestring[4:8])[0]
+    @staticmethod
+    def message_split(big_payload : bytearray, purpose_for_all : int):
+        MAX_SIZE = 8192
+        size = len(big_payload)
         current_b = 8
+
         number : int = 1
-        b_size = struct.pack(">L", 8192)
         message_list = []
         
-        while current_b + 8192 < 8 + size:
+        while len(big_payload) > MAX_SIZE:
             b_num = struct.pack(">B", number)
 
-            message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:current_b+8192] + bytestring[-1]
+            payload_temp = big_payload[:8192]
+            message_list.append(Message(purpose=purpose_for_all,payload=payload_temp,number=number))
 
+            # message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:current_b+8192] + bytestring[-1]
+
+            big_payload = big_payload[8192:]
             number += 1
-            current_b += 8192
 
-        remaining = size % 8192
-        b_size = struct.pack(">L", remaining)
-        b_num = struct.pack(">B", number)
+        message_list.append(Message(purpose=purpose_for_all, payload=big_payload, number=number))
 
-        message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:-1] + bytestring[-1]
+        # remaining = size % MAX_SIZE
+        # b_size = struct.pack(">L", remaining)
+        # b_num = struct.pack(">B", number)
+
+        # message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:-1] + bytestring[-1]
         return message_list
