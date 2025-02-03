@@ -5,3 +5,6 @@
 __pycache__
 *.pyc
 ws/
+log/
+build/
+install/
