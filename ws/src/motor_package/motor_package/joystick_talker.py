@@ -155,7 +155,7 @@ def run(joysticks, publisher, triggerMult, stopFlag):
 
         b_padUp1 = joysticks[0].get_button(11)
         b_padDown1= joysticks[0].get_button(12)
-        b_padLeft1 = joysticks[0].get_button(13)
+        #b_padLeft1 = joysticks[0].get_button(13)
         # b_padRight1 = joysticks[0].get_button(14)
 
         # b_touchpad1 = joysticks[0].get_button(15)
@@ -172,8 +172,8 @@ def run(joysticks, publisher, triggerMult, stopFlag):
             pass
         if b_padDown1 == 1:
             pass
-        if b_padLeft1 == 1:
-            pass
+        #if b_padLeft1 == 1:
+        #    pass
         # if b_padRight1 == 1:
         #     pass
         
