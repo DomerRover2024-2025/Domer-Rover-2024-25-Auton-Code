@@ -130,17 +130,15 @@ def process_messages() -> None:
             print("driving message")
             payload = curr_msg.get_payload()
             print(len(payload))
-            lspeed = struct.unpack(">f", payload[0:4])[0]
-            rspeed = struct.unpack(">f", payload[4:8])[0]
-            speed_scalar = struct.unpack(">f", payload[8:12])[0]
-            cam_left = struct.unpack(">B", payload[12:13])[0]
-            cam_right = struct.unpack(">B", payload[13:14])[0]
-            button_x = struct.unpack(">B", payload[14:15])[0]
-            button_y = struct.unpack(">B", payload[15:16])[0]
+            lspeed = struct.unpack(">B", payload[0:1])[0]
+            rspeed = struct.unpack(">B", payload[1:2])[0]
+            speed_scalar = struct.unpack(">f", payload[2:6])[0]
+            cam_left = struct.unpack(">B", payload[6:7])[0]
+            cam_right = struct.unpack(">B", payload[7:8])[0]
+            button_x = struct.unpack(">B", payload[8:9])[0]
+            button_y = struct.unpack(">B", payload[9:10])[0]
 
-            .write(f"{lspeed} {rspeed}\n")
-
-            rclpy.spin(talkerNode)
+            arduino.write(f"{lspeed} {rspeed}\n".encode())
         
         if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
             _, buffer = capture_image(60)
