@@ -54,10 +54,13 @@ class Scheduler:
             for topic in self.topics: # all the topic names
                 c = 0 # packet counter
                 while self.messages[topic] and c < self.topics[topic]:
-                    curr_msg = self.messages[topic].popleft()
-                    self.ser.write(curr_msg.get_as_bytes())
-                    c += 1
-                    print("sent message")
+                    try:
+                        curr_msg = self.messages[topic].popleft()
+                        self.ser.write(curr_msg.get_as_bytes())
+                        c += 1
+                        print(f"Message sent: {curr_msg}")
+                    except Exception as e:
+                        print(e)
 
     # print as a string
     def __str__(self) -> str:

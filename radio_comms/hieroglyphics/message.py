@@ -25,7 +25,7 @@ class Message:
         self.purpose : int = purpose
         self.number : int = number
         self.payload : bytes = payload
-        if payload:
+        if payload is not None:
             self.size_of_payload : int = len(payload)
             self.checksum : bytes = self.calculate_checksum(payload)
 
@@ -95,17 +95,23 @@ class Message:
     @staticmethod
     def message_split(big_payload : bytearray, purpose_for_all : int):
         MAX_SIZE = 8192
-        size = len(big_payload)
-        current_b = 8
+        print(len(big_payload))
 
         number : int = 1
         message_list = []
         
         while len(big_payload) > MAX_SIZE:
-            b_num = struct.pack(">B", number)
-
-            payload_temp = big_payload[:8192]
-            message_list.append(Message(purpose=purpose_for_all,payload=payload_temp,number=number))
+            try:
+                payload_temp = big_payload[:8192]
+            except Exception as e:
+                print("2", e)
+                break
+            try:
+                msg = Message(purpose=purpose_for_all,payload=payload_temp,number=number)
+            except Exception as e:
+                print("1", e)
+                break
+            message_list.append(msg)
 
             # message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:current_b+8192] + bytestring[-1]
 

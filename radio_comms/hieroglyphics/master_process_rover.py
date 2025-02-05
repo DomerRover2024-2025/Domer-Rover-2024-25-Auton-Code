@@ -71,13 +71,12 @@ def main():
             potential_message.checksum = ser.read(1)
             
             # print(potential_message)
-            print(potential_message.get_as_bytes())
             # print("Payload decoded: ", potential_message.get_payload().decode())
         
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
-            #print(f"Message added: {potential_message.get_as_bytes()}")
+            print(f"Message added: {potential_message.get_as_bytes()}")
 
             #payload_ack = "msg received! :)"
             #msg_ack = Message(purpose=0, payload=payload_ack.encode())
@@ -118,7 +117,7 @@ def process_messages() -> None:
     # #create node
     # talkerNode = TalkerNode()
 
-    arduino = serial.Serial('/dev/ttyACM0')
+    #arduino = serial.Serial('/dev/ttyACM0')
 
     while True:
         if len(messages_to_process) == 0:
@@ -138,12 +137,14 @@ def process_messages() -> None:
             button_x = struct.unpack(">B", payload[8:9])[0]
             button_y = struct.unpack(">B", payload[9:10])[0]
 
-            arduino.write(f"{lspeed} {rspeed}\n".encode())
+            #arduino.write(f"{lspeed} {rspeed}\n".encode())
         
         if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
-            _, buffer = capture_image(60)
-            scheduler.add_list_of_messages("hdp", Message.message_split(big_payload=buffer, purpose_for_all=4))
-
+            length, buffer = capture_image(60)
+            msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=4)
+            scheduler.add_list_of_messages("hdp", msgs)
+            print("Message added of length ", len(buffer.tobytes()))
+            print(type(buffer))
             #arduino_ser.write(msg.encode())
         if curr_msg.purpose == 0: # indicates DEBUGGING
             print("debugging message")
