@@ -72,8 +72,8 @@ def main():
 
             while True:
                 lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
-                b_lspeed = struct.pack(">f", lspeed)
-                b_rspeed = struct.pack(">f", rspeed)
+                b_lspeed = struct.pack(">B", lspeed)
+                b_rspeed = struct.pack(">B", rspeed)
                 b_scalar = struct.pack(">f", scalar)
                 b_camleft = struct.pack(">B", camleft)
                 b_camright = struct.pack(">B", camright)
@@ -94,6 +94,10 @@ def main():
                     break
                 msg = Message(purpose=0, payload=hello.encode())
                 ser.write(msg.get_as_bytes())
+        
+        elif request == "hdr":
+            msg = Message(purpose=0, payload=bytes(0))
+            ser.write(msg.get_as_bytes())
 
 #####################
 ##### FUNCTIONS #####
@@ -150,6 +154,9 @@ def process_messages() -> None:
     current_video_feed_str = b''
     current_video_feed_num = 0
 
+    current_hdp_str = b''
+    current_hdp_num = 0
+
     while True:
         if len(messages_from_rover) == 0:
             continue
@@ -165,10 +172,16 @@ def process_messages() -> None:
             else:
                 current_video_feed_num = 0
                 save_and_output_image(current_video_feed_str, "vid_feed")
-                current_video_feed_str = curr_msg.get_payload()
+                current_video_feed_str = b''
 
         if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
-            pass
+            if current_hdp_str < curr_msg.number:
+                current_hdp_str += curr_msg.get_payload()
+                current_hdp_num += 1
+            else:
+                current_hdp_num = 0
+                save_and_output_image(current_hdp_str, "hdp")
+                current_hdp_str = b''
 
         if curr_msg.purpose == 0: # indicates DEBUGGING
             payload = curr_msg.get_payload()

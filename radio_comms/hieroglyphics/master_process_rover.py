@@ -20,12 +20,13 @@ from datetime import datetime
 MSG_LOG = "messages_rover.log"
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
+scheduler = Scheduler(ser=None, topics=None)
 
 def main():
-    #port = "/dev/cu.usbserial-BG00HO5R"
+    port = "/dev/cu.usbserial-BG00HO5R"
     #port = "/dev/cu.usbserial-B001VC58"
     #port = "COM4"
-    port = "/dev/ttyTHS1"
+    #port = "/dev/ttyTHS1"
     baud = 57600
     timeout = 0.1
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -33,13 +34,14 @@ def main():
     ser.reset_output_buffer()
 
     topics = {
-        "status": 5,
-        "image": 3,
-        "position": 1
+        "status": 3,
+        "image": 10,
+        "position": 1,
+        "hdp": 5
     }
 
-    # temporary. to be replaced by a message handler class
-    scheduler = Scheduler(ser=ser, topics=topics)
+    scheduler.ser = ser
+    scheduler.set_topics(topics=topics)
 
     executor = concurrent.futures.ThreadPoolExecutor(3)
     future_scheduler = executor.submit(scheduler.send_messages)
@@ -86,12 +88,12 @@ def main():
         ##### READ: CAMERA? #####
         should_capture_image = False
         if should_capture_image:
-            _, buffer = capture_image()
+            _, buffer = capture_image(30)
             scheduler.add_list_of_messages("image", Message.message_split(big_payload=buffer, purpose_for_all=2))
 
         ##### READ: ARM? #####
 
-def capture_image() -> tuple[int, bytearray]:
+def capture_image(quality : int) -> tuple[int, bytearray]:
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
 
@@ -102,7 +104,7 @@ def capture_image() -> tuple[int, bytearray]:
     # with open("temp2.txt", 'bw') as f:
     #     f.write(frame)
 
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
     encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
     size_of_data = len(buffer)
     #size_packed = struct.pack(">L", size_of_data)
@@ -110,9 +112,13 @@ def capture_image() -> tuple[int, bytearray]:
 
 def process_messages() -> None:
 
-    port_arduino = "/dev/ttyACM0"
-    #arduino_ser : serial.Serial = serial.Serial(port_arduino)
     print("thread activated :)")
+
+    # rclpy.init(args=None)
+    # #create node
+    # talkerNode = TalkerNode()
+
+    arduino = serial.Serial('/dev/ttyACM0')
 
     while True:
         if len(messages_to_process) == 0:
@@ -124,15 +130,19 @@ def process_messages() -> None:
             print("driving message")
             payload = curr_msg.get_payload()
             print(len(payload))
-            lspeed = struct.unpack(">f", payload[0:4])[0]
-            rspeed = struct.unpack(">f", payload[4:8])[0]
-            speed_scalar = struct.unpack(">f", payload[8:12])[0]
-            cam_left = struct.unpack(">B", payload[12:13])[0]
-            cam_right = struct.unpack(">B", payload[13:14])[0]
-            button_x = struct.unpack(">B", payload[14:15])[0]
-            button_y = struct.unpack(">B", payload[15:16])[0]
+            lspeed = struct.unpack(">B", payload[0:1])[0]
+            rspeed = struct.unpack(">B", payload[1:2])[0]
+            speed_scalar = struct.unpack(">f", payload[2:6])[0]
+            cam_left = struct.unpack(">B", payload[6:7])[0]
+            cam_right = struct.unpack(">B", payload[7:8])[0]
+            button_x = struct.unpack(">B", payload[8:9])[0]
+            button_y = struct.unpack(">B", payload[9:10])[0]
 
-            print(f"{lspeed} {rspeed}")
+            arduino.write(f"{lspeed} {rspeed}\n".encode())
+        
+        if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
+            _, buffer = capture_image(60)
+            scheduler.add_list_of_messages("hdp", Message.message_split(big_payload=buffer, purpose_for_all=4))
 
             #arduino_ser.write(msg.encode())
         if curr_msg.purpose == 0: # indicates DEBUGGING
@@ -140,8 +150,33 @@ def process_messages() -> None:
             payload = curr_msg.get_payload()
             print(payload.decode())
 
-    arduino_ser.close()
+    talkerNode.destroy_node()
+    rclpy.shutdown()
+    arduino.close()
 
+# import rclpy
+# from rclpy.node import Node
+# from std_msgs.msg import String
+# #be able to write to the arduino serial port
+# #create an instance of the serial, open up a serial.write, and then write whatever the message being published is
+# class TalkerNode(Node):
+#     def __init__(self):
+#         super().__init__("talker_node")
+#         # TODO change the topic here from 'motor_state'
+#         self.publisher_ = self.create_publisher(String, 'motor_state', 10)
+#         timer_period = 0.1
+#         #self.timer = self.create_timer(timer_period, self.timer_callback)
+#         self.count = 0
+#         self.serialPort = serial.Serial('/dev/ttyACM0')
+#     def listener_callback(self, msg):
+#         #msg = String()
+#         #msg.data = f"Hello everyone {self.count}"
+#         # self.publisher_.publish(msg.data)
+#         self.count += 1
+#         self.get_logger().info(f"Recieving {msg.data}")
+#         # self.write(msg.data)
+#      #def write(x):
+#         self.serialPort.write(msg.data.encode())
 
 
 if __name__ == "__main__":

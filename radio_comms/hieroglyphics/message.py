@@ -112,7 +112,7 @@ class Message:
             big_payload = big_payload[8192:]
             number += 1
 
-        message_list.append(Message(purpose=purpose_for_all, payload=big_payload, number=number))
+        message_list.append(Message(purpose=purpose_for_all, payload=big_payload, number=0))
 
         # remaining = size % MAX_SIZE
         # b_size = struct.pack(">L", remaining)
