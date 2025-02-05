@@ -22,10 +22,11 @@ class TalkerNode(Node):
         self.joy_x = 0
         self.joy_y = 0
         
-        # self.triggerMult = 0
-        # self.b_x = 0
-        # self.b_circle = 0
-        
+        self.triggerMult = 0
+        self.b_x = 0
+        self.b_circle = 0
+        self.b_triangle = 0
+        self.b_square = 0
         
 
     def timer_callback(self):
@@ -196,6 +197,11 @@ def run(joysticks, publisher, triggerMult, stopFlag):
 
         publisher.joy_x = int(dutyCycleLeft * 0.1)  
         publisher.joy_y = int(dutyCycleRight * 0.1)
+        publisher.triggerMult = triggerMult
+        publisher.b_x = b_x1
+        publisher.b_circle = b_circle1
+        publisher.b_triangle = b_triangle1
+        publisher.b_square = b_square1
         rclpy.spin_once(publisher)
         
         
