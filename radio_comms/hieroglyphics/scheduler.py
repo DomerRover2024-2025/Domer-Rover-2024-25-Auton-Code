@@ -23,6 +23,10 @@ class Scheduler:
             self.topics : dict[str, int] = topics
             self.messages : dict[str, deque[message.Message]] = {topic : deque() for topic in self.topics}
     
+    def set_topics(self, topics) -> None:
+        self.topics = topics
+        self.messages = {topic : deque() for topic in self.topics}
+
     # wrr = weighted round robin value
     # aka: how many messages of THIS one to send
     #      for every wrr value of other topics
