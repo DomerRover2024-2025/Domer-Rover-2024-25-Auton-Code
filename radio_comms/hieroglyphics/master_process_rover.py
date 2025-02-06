@@ -23,8 +23,8 @@ messages_to_process = deque()
 scheduler = Scheduler(ser=None, topics=None)
 
 def main():
-    port = "/dev/cu.usbserial-BG00HO5R"
-    #port = "/dev/cu.usbserial-B001VC58"
+    #port = "/dev/cu.usbserial-BG00HO5R"
+    port = "/dev/tty.usbserial-B001VC58"
     #port = "COM4"
     #port = "/dev/ttyTHS1"
     baud = 57600
@@ -117,6 +117,7 @@ def process_messages() -> None:
     # #create node
     # talkerNode = TalkerNode()
 
+    # TODO: TODO TODO FIX THIS when connected to the jetson
     #arduino = serial.Serial('/dev/ttyACM0')
 
     while True:
@@ -129,13 +130,13 @@ def process_messages() -> None:
             print("driving message")
             payload = curr_msg.get_payload()
             print(len(payload))
-            lspeed = struct.unpack(">B", payload[0:1])[0]
-            rspeed = struct.unpack(">B", payload[1:2])[0]
-            speed_scalar = struct.unpack(">f", payload[2:6])[0]
-            cam_left = struct.unpack(">B", payload[6:7])[0]
-            cam_right = struct.unpack(">B", payload[7:8])[0]
-            button_x = struct.unpack(">B", payload[8:9])[0]
-            button_y = struct.unpack(">B", payload[9:10])[0]
+            lspeed = struct.unpack(">h", payload[0:2])[0]
+            rspeed = struct.unpack(">h", payload[2:4])[0]
+            speed_scalar = struct.unpack(">f", payload[4:8])[0]
+            cam_left = struct.unpack(">B", payload[8:9])[0]
+            cam_right = struct.unpack(">B", payload[9:10])[0]
+            button_x = struct.unpack(">B", payload[10:11])[0]
+            button_y = struct.unpack(">B", payload[11:12])[0]
 
             #arduino.write(f"{lspeed} {rspeed}\n".encode())
         

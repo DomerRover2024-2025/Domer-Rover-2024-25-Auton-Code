@@ -45,6 +45,8 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
+    open(MSG_LOG, 'w').close()
+
     executor = concurrent.futures.ThreadPoolExecutor(3)
     future = executor.submit(process_messages)
     future = executor.submit(read_from_port, ser)
@@ -72,8 +74,8 @@ def main():
 
             while True:
                 lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
-                b_lspeed = struct.pack(">B", lspeed)
-                b_rspeed = struct.pack(">B", rspeed)
+                b_lspeed = struct.pack(">h", lspeed)
+                b_rspeed = struct.pack(">h", rspeed)
                 b_scalar = struct.pack(">f", scalar)
                 b_camleft = struct.pack(">B", camleft)
                 b_camright = struct.pack(">B", camright)
@@ -103,27 +105,8 @@ def main():
 ##### FUNCTIONS #####
 #####################
 
-def print_options() -> None:
-    print("----------------")
-    print("MENU OF CONTROLS")
-    print("----------------")
-    print("(quit) to quit")
-    print("(log) get most recent 10 msgs of the log")
-    print("(ldp) for LD photo")
-    print("(hdp) for HD photo")
-
-    # following three may be merged together
-    print("(dr) for driving")
-    print("(arm) for arm control")
-    print("(drl) operate the drill")
-
-    print("(wrd) for sending word to arm to type out")
-    print("(hbt) Heartbeat mode: Receive coordinates")
-    print("(test) Send over tester strings for debugging purposes")
-    print("(menu) See menu options again")
-
+##### READ FROM THE SERIAL PORT for incoming messages
 def read_from_port(ser: serial.Serial):
-##### READ FROM THE SERIAL PORT
     while True:
         b_input = ser.read(1)
         if len(b_input) != 0:
@@ -148,8 +131,8 @@ def read_from_port(ser: serial.Serial):
             messages_from_rover.append(potential_message)
             print(f"Message added {potential_message}")
 
+##### THE BRAINS FOR DECODING IMPORTED MESSAGES FROM ROVER
 def process_messages() -> None:
-
     print("thread activated :)")
 
     current_video_feed_str = b''
@@ -214,6 +197,24 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
 def exit_main(executor : concurrent.futures.ThreadPoolExecutor):
     executor.shutdown()
 
+def print_options() -> None:
+    print("----------------")
+    print("MENU OF CONTROLS")
+    print("----------------")
+    print("(quit) to quit THIS SIDE ONLY")
+    print("(log) get most recent 10 msgs of the log")
+    print("(ldp) for LD photo")
+    print("(hdp) for HD photo")
+
+    # following three may be merged together
+    print("(dr) for driving")
+    print("(arm) for arm control")
+    print("(drl) operate the drill")
+
+    print("(wrd) for sending word to arm to type out")
+    print("(hbt) Heartbeat mode: Receive coordinates")
+    print("(test) Send over tester strings for debugging purposes")
+    print("(anything else) See menu options again")
 
 
 

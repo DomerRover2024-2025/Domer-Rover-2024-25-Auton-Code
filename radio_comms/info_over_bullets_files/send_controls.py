@@ -22,8 +22,9 @@ print("connected to publisher")
 
 while True:
     lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
-    b_lspeed = struct.pack(">B", lspeed)
-    b_rspeed = struct.pack(">B", rspeed)
+    print(lspeed, rspeed)
+    b_lspeed = struct.pack(">h", lspeed)
+    b_rspeed = struct.pack(">h", rspeed)
     b_scalar = struct.pack(">f", scalar)
     b_camleft = struct.pack(">B", camleft)
     b_camright = struct.pack(">B", camright)
