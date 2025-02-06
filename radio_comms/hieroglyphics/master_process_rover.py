@@ -37,7 +37,7 @@ def main():
         "status": 3,
         "image": 10,
         "position": 1,
-        "hdp": 5
+        "hdp": 7
     }
 
     scheduler.ser = ser
@@ -141,11 +141,11 @@ def process_messages() -> None:
             #arduino.write(f"{lspeed} {rspeed}\n".encode())
         
         if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
-            length, buffer = capture_image(60)
+            length, buffer = capture_image(90)
             msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=4)
             scheduler.add_list_of_messages("hdp", msgs)
             print("Message added of length ", len(buffer.tobytes()))
-            print(type(buffer))
+
             #arduino_ser.write(msg.encode())
         if curr_msg.purpose == 0: # indicates DEBUGGING
             print("debugging message")
