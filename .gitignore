@@ -2,7 +2,7 @@
 .env
 *.pdf
 .dm_env
-__pycache__
+__pycache__/
 *.pyc
 ws/
 log/
