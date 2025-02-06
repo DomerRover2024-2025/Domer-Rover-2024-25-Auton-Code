@@ -38,7 +38,7 @@ MSG_LOG = "messages_base.log"
 def main():
     #port = "/dev/tty.usbserial-BG00HO5R"
     #port = "/dev/cu.usbserial-B001VC58"
-    port = "COM4"
+    port = "COM3"
     baud = 57600
     timeout = 0.01
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -110,7 +110,6 @@ def read_from_port(ser: serial.Serial):
     while True:
         b_input = ser.read(1)
         if len(b_input) != 0:
-            print(b_input )
             potential_message = Message(new=False)
             b_input += ser.read(1)
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
@@ -129,7 +128,7 @@ def read_from_port(ser: serial.Serial):
             potential_message.checksum = ser.read(1)
 
             messages_from_rover.append(potential_message)
-            print(f"Message added {potential_message}")
+            print(f"Message added {potential_message}; len = {len(messages_from_rover)}")
 
 ##### THE BRAINS FOR DECODING IMPORTED MESSAGES FROM ROVER
 def process_messages() -> None:
@@ -145,17 +144,15 @@ def process_messages() -> None:
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
-
         if curr_msg.purpose == 2: # indicates "HEARTBEAT / position"
             pass
-
         if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
             if current_video_feed_num < curr_msg.number:
                 current_video_feed_str += curr_msg.get_payload()
                 current_video_feed_num += 1
+                print(current_video_feed_num)
             else:
                 current_video_feed_num = 0
-                print(len(current_hdp_str))
                 try:
                     save_and_output_image(current_video_feed_str, "vid_feed")
                 except Exception as e:
@@ -163,12 +160,14 @@ def process_messages() -> None:
                 current_video_feed_str = b''
 
         if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
-            print("recvd photo")
-            if current_hdp_str < curr_msg.number:
+            if current_hdp_num < curr_msg.number:
                 current_hdp_str += curr_msg.get_payload()
                 current_hdp_num += 1
+                print(current_hdp_num)
             else:
                 current_hdp_num = 0
+                current_hdp_str += curr_msg.get_payload()
+                print(len(current_hdp_str))
                 try:
                     save_and_output_image(current_hdp_str, "hdp")
                 except Exception as e:
@@ -181,10 +180,10 @@ def process_messages() -> None:
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
     try:
-        buffer = buffer.frombytes()
+        #buffer = buffer.frombytes()
         image = np.frombuffer(buffer, dtype=np.uint8)
         frame = cv2.imdecode(image, 1)
-        cv2.imwrite(f"{type}/{time.now()}.jpg", frame)
+        cv2.imwrite(f"{type}/{time.time()}.jpg", frame)
         cv2.imshow(f'{type}', frame)
     #print("Image received and shown.")
         cv2.waitKey(1)
