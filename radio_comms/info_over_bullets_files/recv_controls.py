@@ -1,8 +1,9 @@
 import zmq
 import struct
+import serial
 
 ##### CONSTANTS ######
-HOST = "localhost"
+HOST = "192.168.11.179"
 PORT = 12347
 
 # create subscribe socket
@@ -14,6 +15,8 @@ socket.connect(f"tcp://{HOST}:{PORT}")
 socket.subscribe("") # subscribe to everything
 
 print("connection open")
+
+arduino = serial.Serial("/dev/ttyACM0")
 
 while True:
     # receive the message (an encoded image)
@@ -29,6 +32,8 @@ while True:
     button_y = struct.unpack(">B", payload[11:12])[0]
 
     msg = f"{lspeed} {rspeed}\n"
-    print(msg)
+    arduino.write(msg)
+    print(msg, end="")
 
 socket.close()
+arduino.close()

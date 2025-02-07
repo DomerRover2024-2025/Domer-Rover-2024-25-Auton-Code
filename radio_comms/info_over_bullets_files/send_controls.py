@@ -22,7 +22,6 @@ print("connected to publisher")
 
 while True:
     lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
-    print(lspeed, rspeed)
     b_lspeed = struct.pack(">h", lspeed)
     b_rspeed = struct.pack(">h", rspeed)
     b_scalar = struct.pack(">f", scalar)
@@ -31,6 +30,8 @@ while True:
     b_button_x = struct.pack(">B", button_x)
     b_button_y = struct.pack(">B", button_y)
     payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
+
+    print(lspeed, rspeed)
 
     socket.send(payload)
 socket.close()
