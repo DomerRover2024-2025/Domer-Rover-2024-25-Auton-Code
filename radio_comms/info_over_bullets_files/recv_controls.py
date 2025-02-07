@@ -29,6 +29,14 @@ while True:
     button_y = struct.unpack(">B", payload[15:16])[0]
 
     msg = f"{lspeed} {rspeed}\n"
+<<<<<<< Updated upstream
     print(msg)
 
 socket.close()
+=======
+    arduino.write(msg.encode())
+    print(msg, end="")
+
+socket.close()
+arduino.close()
+>>>>>>> Stashed changes
