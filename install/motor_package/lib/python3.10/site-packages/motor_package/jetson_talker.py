@@ -21,13 +21,13 @@ class TalkerNode(Node):
         self.serialPort = serial.Serial('/dev/ttyACM0')
     def listener_callback(self, msg):
         self.count += 1
-        self.get_logger().info(f"Recieving {msg.data}")
+        self.get_logger().info(f"Receiving {msg.data}")
         
-        try:
-            joy_x, joy_y, triggerMult, b_x, b_circle, b_triangle, b_square = msg.data.split()
+        try:            
+            joy_x, joy_y, triggerMult, b_x, b_circle, b_triangle, b_square = tuple(msg.data.split())
 
-            joy_x = float(joy_x)
-            joy_y = float(joy_y)
+            joy_x = int(joy_x)
+            joy_y = int(joy_y)
             triggerMult = float(triggerMult)
             b_x = int(b_x)
             b_circle = int(b_circle)
@@ -35,14 +35,16 @@ class TalkerNode(Node):
             b_square = int(b_square)
 
             if (b_circle == 1):
-                serial_data = f"-25 25\n"
-            elif b_square == 1:
-                serial_data = f"25 -25\n"
-            else:
-                serial_data = f"{joy_x} {joy_y}\n"
+                joy_x = -25
+                joy_y = 25
+            elif (b_square == 1):
+                joy_x = 25
+                joy_y = -25
 
-            self.get_logger().info(f"SERIALDATA: {serial_data}")
-            self.serialPort.write(msg.serial_data.encode())
+            serial_data = f"{joy_x} {joy_y}\n"
+
+            self.get_logger().info(f"SERIAL_DATA: {serial_data}")
+            self.serialPort.write(serial_data.encode())
         except ValueError as e:
             self.get_logger().error(f"Error parsing: {e}")
         
