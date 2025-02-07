@@ -90,8 +90,8 @@ def run(joysticks, triggerMult, stopFlag):
         if 0 in joysticks:
             guid = joysticks[0].get_guid()
 
-        a_lt1 = deadzone(joysticks[0].get_axis(4) + 1)
-        a_rt1 = deadzone(joysticks[0].get_axis(5) + 1)
+        a_lt1 = deadzone(joysticks[0].get_axis(5) + 1)
+        a_rt1 = deadzone(joysticks[0].get_axis(4) + 1)
         
         b_lbumper1 = joysticks[0].get_button(9)
         b_rbumper1 = joysticks[0].get_button(10)
@@ -112,7 +112,7 @@ def run(joysticks, triggerMult, stopFlag):
 
         b_padUp1 = joysticks[0].get_button(11)
         b_padDown1= joysticks[0].get_button(12)
-        b_padLeft1 = joysticks[0].get_button(13)
+        #b_padLeft1 = joysticks[0].get_button(13)
         # b_padRight1 = joysticks[0].get_button(14)
 
         # b_touchpad1 = joysticks[0].get_button(15)
@@ -120,7 +120,7 @@ def run(joysticks, triggerMult, stopFlag):
         mag, angle = cart2pol(a_leftx1, a_lefty1)
         angleRads = math.radians(angle)
 
-        triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
+        triggerMult = triggerMult + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
         
         triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x for speed scalar
         
@@ -128,8 +128,8 @@ def run(joysticks, triggerMult, stopFlag):
             pass
         if b_padDown1 == 1:
             pass
-        if b_padLeft1 == 1:
-            pass
+        #if b_padLeft1 == 1:
+        #    pass
         # if b_padRight1 == 1:
         #     pass
         
@@ -143,7 +143,7 @@ def run(joysticks, triggerMult, stopFlag):
         time.sleep(0.75)
         dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
 
-        yield (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1, 0, 0)
+        yield (dutyCycleLeft, dutyCycleRight, triggerMult, b_x1, b_circle1, b_triangle1, b_square1)
 
         # ************************
         # for 6 wheel individual inputs, add indiv wheel speed variables to publisher, use testController3 arduino code
