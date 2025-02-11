@@ -18,13 +18,14 @@ from datetime import datetime
 #np.set_printoptions(threshold=sys.maxsize)
 
 MSG_LOG = "messages_rover.log"
+VID_WIDTH = 200
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
 scheduler = Scheduler(ser=None, topics=None)
 
 def main():
-    port = "/dev/cu.usbserial-BG00HO5R"
-    #port = "/dev/cu.usbserial-B001VC58"
+    #port = "/dev/cu.usbserial-BG00HO5R"
+    port = "/dev/tty.usbserial-B001VC58"
     #port = "COM4"
     #port = "/dev/ttyTHS1"
     baud = 57600
@@ -35,9 +36,10 @@ def main():
 
     topics = {
         "status": 3,
-        "image": 10,
+        "vid_feed": 10,
         "position": 1,
-        "hdp": 5
+        "hdp": 1,
+        "ldp": 1
     }
 
     scheduler.ser = ser
@@ -52,7 +54,7 @@ def main():
         ##### READ: SERIAL PORT #####
         b_input = ser.read(1)
         if len(b_input) != 0:
-            #print(b_input )
+
             potential_message = Message(new=False)
             b_input += ser.read(1)
             potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
@@ -63,36 +65,26 @@ def main():
             b_input = ser.read(struct.calcsize(">L"))
             potential_message.set_size(b_input)
             payload = b''
-            # print(potential_message.size_of_payload)
+
             while len(payload) < potential_message.size_of_payload:
                 payload += ser.read(potential_message.size_of_payload - len(payload))
-            # print(len(payload))
+
             potential_message.set_payload(payload)
             potential_message.checksum = ser.read(1)
-            
-            # print(potential_message)
-            # print("Payload decoded: ", potential_message.get_payload().decode())
-        
 
             # TODO replace with a message manager
             messages_to_process.append(potential_message)
             print(f"Message added: {potential_message.get_as_bytes()}")
 
-            #payload_ack = "msg received! :)"
-            #msg_ack = Message(purpose=0, payload=payload_ack.encode())
-            #scheduler.add_single_message("position", msg_ack)
-    
-        ##### READ: IMU? #####
-
-        ##### READ: CAMERA? #####
+        ##### READ: CAMERA #####
         should_capture_image = False
         if should_capture_image:
-            _, buffer = capture_image(30)
-            scheduler.add_list_of_messages("image", Message.message_split(big_payload=buffer, purpose_for_all=2))
+            _, buffer = capture_image(90, resize_width=VID_WIDTH)
+            if buffer == None:
+                continue
+            scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=buffer, purpose_for_all=2))
 
-        ##### READ: ARM? #####
-
-def capture_image(quality : int) -> tuple[int, bytearray]:
+def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearray]:
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
 
@@ -102,6 +94,10 @@ def capture_image(quality : int) -> tuple[int, bytearray]:
 
     # with open("temp2.txt", 'bw') as f:
     #     f.write(frame)
+
+    if resize_width:
+        resize_factor = resize_width / frame.shape[1]
+        frame = cv2.resize(frame, (resize_width, int(resize_factor * frame.shape[0])))
 
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
     encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
@@ -117,6 +113,7 @@ def process_messages() -> None:
     # #create node
     # talkerNode = TalkerNode()
 
+    # TODO: TODO TODO FIX THIS when connected to the jetson
     #arduino = serial.Serial('/dev/ttyACM0')
 
     while True:
@@ -129,24 +126,37 @@ def process_messages() -> None:
             print("driving message")
             payload = curr_msg.get_payload()
             print(len(payload))
-            lspeed = struct.unpack(">B", payload[0:1])[0]
-            rspeed = struct.unpack(">B", payload[1:2])[0]
-            speed_scalar = struct.unpack(">f", payload[2:6])[0]
-            cam_left = struct.unpack(">B", payload[6:7])[0]
-            cam_right = struct.unpack(">B", payload[7:8])[0]
-            button_x = struct.unpack(">B", payload[8:9])[0]
-            button_y = struct.unpack(">B", payload[9:10])[0]
-
+            lspeed = struct.unpack(">h", payload[0:2])[0]
+            rspeed = struct.unpack(">h", payload[2:4])[0]
+            speed_scalar = struct.unpack(">f", payload[4:8])[0]
+            cam_left = struct.unpack(">B", payload[8:9])[0]
+            cam_right = struct.unpack(">B", payload[9:10])[0]
+            button_x = struct.unpack(">B", payload[10:11])[0]
+            button_y = struct.unpack(">B", payload[11:12])[0]
+            # TODO TODO TODO TODO FIX THIS WHEN CONNECTED TO THE JETSON
             #arduino.write(f"{lspeed} {rspeed}\n".encode())
         
         if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
-            length, buffer = capture_image(60)
+            length, buffer = capture_image(90)
+            if buffer == None:
+                error_str = "Error: could not capture a high definition photo."
+                scheduler.add_single_message(Message(purpose=0, payload=error_str.encode()))
             msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=4)
             scheduler.add_list_of_messages("hdp", msgs)
             print("Message added of length ", len(buffer.tobytes()))
-            print(type(buffer))
+        
+        if curr_msg.purpose == 6: # indicates TAKE ME A BAD PHOTO
+            length, buffer = capture_image(90, resize_width=VID_WIDTH)
+            if buffer == None:
+                error_str = "Error: could not capture a high definition photo."
+                scheduler.add_single_message(Message(purpose=0, payload=error_str.encode()))
+            
+            msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=6)
+            scheduler.add_list_of_messages("ldp", msgs)
+            print("Message added of length ", len(buffer.tobytes()))
+
             #arduino_ser.write(msg.encode())
-        if curr_msg.purpose == 0: # indicates DEBUGGING
+        if curr_msg.purpose == 0: # indicates DEBUGGING to the rover
             print("debugging message")
             payload = curr_msg.get_payload()
             print(payload.decode())

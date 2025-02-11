@@ -31,5 +31,7 @@ while True:
     b_button_y = struct.pack(">B", button_y)
     payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
 
+    print(lspeed, rspeed)
+
     socket.send(payload)
 socket.close()

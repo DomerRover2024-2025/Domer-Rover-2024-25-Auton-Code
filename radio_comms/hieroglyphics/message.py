@@ -27,7 +27,7 @@ class Message:
         self.payload : bytes = payload
         if payload is not None:
             self.size_of_payload : int = len(payload)
-            self.checksum : bytes = self.calculate_checksum(payload)
+            #self.checksum : bytes = self.calculate_checksum(payload)
 
     # converting a given bytestring into its corresponding Message counterpart
     def convert_from_bytestring(self, bytestring : bytes):
@@ -43,9 +43,6 @@ class Message:
             self.msg_id = struct.unpack(">H", id)[0]
         else:
             self.msg_id = id
-
-    def calculate_checksum(self, payload: str):
-        return struct.pack(">B", reduce(lambda a,b: a ^ b, payload))
     
     def get_payload(self):
         return self.payload
@@ -57,8 +54,9 @@ class Message:
         b_purpose = struct.pack(">B", self.purpose)
         b_number = struct.pack(">B", self.number)
         b_size = struct.pack(">L", self.size_of_payload)
-        return b_id + b_purpose + b_number + b_size + self.payload + self.checksum
-
+        bytestring = b_id + b_purpose + b_number + b_size + self.payload
+        return bytestring + Message.calculate_checksum(bytestring)
+    
     # def get_total_size(self):
     #     return struct.calcsize(self.purpose)
     
@@ -86,6 +84,10 @@ class Message:
         if not self:
             string = f"INVALID|{string}"
         return string
+    
+    @staticmethod
+    def calculate_checksum(self, bytestring: str):
+        return struct.pack(">B", reduce(lambda a,b: a ^ b, bytestring))
     
     @staticmethod
     def log_message(msg : 'Message', filename : str):
@@ -117,3 +119,7 @@ class Message:
 
         # message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:-1] + bytestring[-1]
         return message_list
+
+    @staticmethod
+    def test_checksum(bytestring, checksum):
+        return checksum == Message.calculate_checksum(bytestring)
