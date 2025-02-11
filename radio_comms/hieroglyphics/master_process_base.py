@@ -30,6 +30,7 @@ from datetime import datetime
 
 messages_from_rover = deque()
 MSG_LOG = "messages_base.log"
+ERR_LOG = "errors_from_rover.log"
 
 ################
 ##### MAIN #####
@@ -100,6 +101,10 @@ def main():
         elif request == "hdp":
             msg = Message(new=True, purpose=4, payload=bytes(1))
             ser.write(msg.get_as_bytes())
+        
+        elif request == "ldp":
+            msg = Message(new=True, purpose=6, payload=bytes(1))
+            ser.write(msg.get_as_bytes())
 
 #####################
 ##### FUNCTIONS #####
@@ -144,15 +149,22 @@ def process_messages() -> None:
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
+        if curr_msg.purpose == 0: # indicates ERROR
+            error_msg = curr_msg.get_payload().decode()
+            print(error_msg)
+            with open(ERR_LOG,  'a') as f:
+                f.write(error_msg + '\n')
+
         if curr_msg.purpose == 2: # indicates "HEARTBEAT / position"
             pass
+
         if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
             if current_video_feed_num < curr_msg.number:
                 current_video_feed_str += curr_msg.get_payload()
                 current_video_feed_num += 1
-                print(current_video_feed_num)
             else:
                 current_video_feed_num = 0
+                current_video_feed_str += curr_msg.get_payload()
                 try:
                     save_and_output_image(current_video_feed_str, "vid_feed")
                 except Exception as e:
@@ -163,11 +175,9 @@ def process_messages() -> None:
             if current_hdp_num < curr_msg.number:
                 current_hdp_str += curr_msg.get_payload()
                 current_hdp_num += 1
-                print(current_hdp_num)
             else:
                 current_hdp_num = 0
                 current_hdp_str += curr_msg.get_payload()
-                print(len(current_hdp_str))
                 try:
                     save_and_output_image(current_hdp_str, "hdp")
                 except Exception as e:
@@ -183,9 +193,10 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
         #buffer = buffer.frombytes()
         image = np.frombuffer(buffer, dtype=np.uint8)
         frame = cv2.imdecode(image, 1)
+        if not os.path.isdir(f"{type}"):
+            os.mkdir(f"{type}")
         cv2.imwrite(f"{type}/{time.time()}.jpg", frame)
         cv2.imshow(f'{type}', frame)
-    #print("Image received and shown.")
         cv2.waitKey(1)
         return True
     except Exception as e:
@@ -213,9 +224,7 @@ def print_options() -> None:
     print("(wrd) for sending word to arm to type out")
     print("(hbt) Heartbeat mode: Receive coordinates")
     print("(test) Send over tester strings for debugging purposes")
-    print("(anything else) See menu options again")
-
-
+    print("(literally anything else) See menu options again")
 
 
 if __name__ == "__main__":
