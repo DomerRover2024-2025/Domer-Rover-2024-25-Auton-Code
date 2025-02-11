@@ -5,13 +5,15 @@ import time
 ###### CONSTANTS ######
 HOST = "*"
 PORT = 12346
-QUALITY = 75
+QUALITY = 80
 TIME_BETWEEN_FRAMES = 0.05
+CAM_PATH = '/dev/v4l/by-id/usb-046d_081b_32750F50-video-index0'
 
 # create publish socket and video capture object
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(CAM_PATH)
+
 
 # bind the host and port
 socket.bind(f"tcp://{HOST}:{PORT}")
