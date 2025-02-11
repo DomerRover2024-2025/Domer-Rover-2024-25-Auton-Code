@@ -37,8 +37,8 @@ MSG_LOG = "messages_base.log"
 
 def main():
     #port = "/dev/tty.usbserial-BG00HO5R"
-    port = "/dev/cu.usbserial-B001VC58"
-    #port = "COM8"
+    #port = "/dev/cu.usbserial-B001VC58"
+    port = "COM4"
     baud = 57600
     timeout = 0.01
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -55,7 +55,7 @@ def main():
         request = input(">> ")
         
         if request == 'quit':
-            exit_main()
+            exit_main(executor=executor)
             return 0
 
         # this request is for debugging, and prints the remaining contents
@@ -72,8 +72,8 @@ def main():
 
             while True:
                 lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
-                b_lspeed = struct.pack(">f", lspeed)
-                b_rspeed = struct.pack(">f", rspeed)
+                b_lspeed = struct.pack(">B", lspeed)
+                b_rspeed = struct.pack(">B", rspeed)
                 b_scalar = struct.pack(">f", scalar)
                 b_camleft = struct.pack(">B", camleft)
                 b_camright = struct.pack(">B", camright)
@@ -94,6 +94,10 @@ def main():
                     break
                 msg = Message(purpose=0, payload=hello.encode())
                 ser.write(msg.get_as_bytes())
+        
+        elif request == "hdp":
+            msg = Message(new=True, purpose=4, payload=bytes(1))
+            ser.write(msg.get_as_bytes())
 
 #####################
 ##### FUNCTIONS #####
@@ -142,6 +146,7 @@ def read_from_port(ser: serial.Serial):
             potential_message.checksum = ser.read(1)
 
             messages_from_rover.append(potential_message)
+            print(f"Message added {potential_message}")
 
 def process_messages() -> None:
 
@@ -149,6 +154,9 @@ def process_messages() -> None:
 
     current_video_feed_str = b''
     current_video_feed_num = 0
+
+    current_hdp_str = b''
+    current_hdp_num = 0
 
     while True:
         if len(messages_from_rover) == 0:
@@ -164,11 +172,25 @@ def process_messages() -> None:
                 current_video_feed_num += 1
             else:
                 current_video_feed_num = 0
-                save_and_output_image(current_video_feed_str, "vid_feed")
-                current_video_feed_str = curr_msg.get_payload()
+                print(len(current_hdp_str))
+                try:
+                    save_and_output_image(current_video_feed_str, "vid_feed")
+                except Exception as e:
+                    print(e)
+                current_video_feed_str = b''
 
         if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
-            pass
+            print("recvd photo")
+            if current_hdp_str < curr_msg.number:
+                current_hdp_str += curr_msg.get_payload()
+                current_hdp_num += 1
+            else:
+                current_hdp_num = 0
+                try:
+                    save_and_output_image(current_hdp_str, "hdp")
+                except Exception as e:
+                    print(e)
+                current_hdp_str = b''
 
         if curr_msg.purpose == 0: # indicates DEBUGGING
             payload = curr_msg.get_payload()
@@ -176,14 +198,16 @@ def process_messages() -> None:
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
     try:
+        buffer = buffer.frombytes()
         image = np.frombuffer(buffer, dtype=np.uint8)
         frame = cv2.imdecode(image, 1)
-        cv2.imwrite(f"{type}/{datetime.now()}.jpg", frame)
+        cv2.imwrite(f"{type}/{time.now()}.jpg", frame)
         cv2.imshow(f'{type}', frame)
     #print("Image received and shown.")
         cv2.waitKey(1)
         return True
-    except:
+    except Exception as e:
+        print(e)
         return False
 
 # everything to do on shutdown
