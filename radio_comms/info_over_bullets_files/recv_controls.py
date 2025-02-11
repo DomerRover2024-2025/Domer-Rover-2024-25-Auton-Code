@@ -32,7 +32,8 @@ while True:
     button_y = struct.unpack(">B", payload[11:12])[0]
 
     msg = f"{lspeed} {rspeed}\n"
-    arduino.write(msg)
+
+    arduino.write(msg.encode())
     print(msg, end="")
 
 socket.close()

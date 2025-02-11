@@ -23,8 +23,8 @@ class TalkerNode(Node):
         self.count += 1
         self.get_logger().info(f"Recieving {msg.data}")
         
-        try:
-            joy_x, joy_y, triggerMult, b_x, b_circle, b_triangle, b_square = msg.data.split()
+        try:            
+            joy_x, joy_y, triggerMult, b_x, b_circle, b_triangle, b_square = tuple(msg.data.split())
 
             joy_x = float(joy_x)
             joy_y = float(joy_y)
@@ -42,7 +42,7 @@ class TalkerNode(Node):
                 serial_data = f"{joy_x} {joy_y}\n"
 
             self.get_logger().info(f"SERIALDATA: {serial_data}")
-            self.serialPort.write(msg.serial_data.encode())
+            self.serialPort.write(serial_data.encode())
         except ValueError as e:
             self.get_logger().error(f"Error parsing: {e}")
         

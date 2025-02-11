@@ -31,7 +31,7 @@ class TalkerNode(Node):
 
     def timer_callback(self):
         msg = String()
-        msg.data = f"{self.joy_x} {self.joy_y}\n"
+        msg.data = f"{self.joy_x} {self.joy_y} {self.triggerMult} {self.b_x} {self.b_circle} {self.b_triangle} {self.b_square}\n"
 
         #msg.data = f"Hello everyone {self.count}"
         self.publisher_.publish(msg)
@@ -164,7 +164,7 @@ def run(joysticks, publisher, triggerMult, stopFlag):
         mag, angle = cart2pol(a_leftx1, a_lefty1)
         angleRads = math.radians(angle)
 
-        triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
+        triggerMult = triggerMult - a_lt1*0.01 + a_rt1*0.01	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
         
         triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x
         
@@ -195,13 +195,13 @@ def run(joysticks, publisher, triggerMult, stopFlag):
         #
         #
 
-        publisher.joy_x = int(dutyCycleLeft * 0.1)  
-        publisher.joy_y = int(dutyCycleRight * 0.1)
-        publisher.triggerMult = triggerMult
-        publisher.b_x = b_x1
-        publisher.b_circle = b_circle1
-        publisher.b_triangle = b_triangle1
-        publisher.b_square = b_square1
+        publisher.joy_x = int(dutyCycleLeft * 0.15)  
+        publisher.joy_y = int(dutyCycleRight * 0.15)
+        publisher.triggerMult = float(triggerMult)
+        publisher.b_x = int(b_x1)
+        publisher.b_circle = int(b_circle1)
+        publisher.b_triangle = int(b_triangle1)
+        publisher.b_square = int(b_square1)
         rclpy.spin_once(publisher)
         
         
