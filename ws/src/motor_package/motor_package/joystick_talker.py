@@ -162,7 +162,7 @@ def run(joysticks, publisher, triggerMult, stopFlag):
 
         #joystick_data = [a_lt1, a_rt1, b_lbumper1, b_rbumper1, a_leftx1, a_lefty1, a_rightx1, a_righty1, b_leftIn1, b_rightIn1, b_x1, b_circle1, b_square1, b_triangle1, b_padUp1, b_padDown1, b_padLeft1, b_padRight1]
         mag, angle = cart2pol(a_leftx1, a_lefty1)
-        angleRads = math.radians(angle)
+        #angleRads = math.radians(angle)
 
         triggerMult = triggerMult - a_lt1*0.01 + a_rt1*0.01	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
         

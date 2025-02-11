@@ -35,11 +35,11 @@ class TalkerNode(Node):
             b_square = int(b_square)
 
             if (b_circle == 1):
-                joy_x = -25
-                joy_y = 25
+                joy_x = -300
+                joy_y = 300
             elif (b_square == 1):
-                joy_x = 25
-                joy_y = -25
+                joy_x = 300
+                joy_y = -300
 
             serial_data = f"{joy_x} {joy_y}\n"
 
