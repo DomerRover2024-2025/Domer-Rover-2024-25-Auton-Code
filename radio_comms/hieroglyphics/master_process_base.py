@@ -140,8 +140,15 @@ def read_from_port(ser: serial.Serial):
                 payload += ser.read(potential_message.size_of_payload - len(payload))
             # print(len(payload))
             potential_message.set_payload(payload)
-            potential_message.checksum = ser.read(1)
+            checksum = ser.read(1)
 
+            print(Message.test_checksum(potential_message))
+            print(checksum)
+            calculated_checksum = Message.calculate_checksum(potential_message.get_as_bytes()[:-1])
+            if checksum != calculated_checksum:
+                print("Checksum error")
+                continue
+            
             messages_from_rover.append(potential_message)
             print(f"Message added {potential_message}; len = {len(messages_from_rover)}")
     print("read thread quit")
