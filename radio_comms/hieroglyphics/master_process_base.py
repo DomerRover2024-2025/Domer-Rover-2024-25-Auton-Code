@@ -140,8 +140,15 @@ def read_from_port(ser: serial.Serial):
                 payload += ser.read(potential_message.size_of_payload - len(payload))
             # print(len(payload))
             potential_message.set_payload(payload)
-            potential_message.checksum = ser.read(1)
+            checksum = ser.read(1)
 
+            print(Message.test_checksum(potential_message))
+            print(checksum)
+            calculated_checksum = Message.calculate_checksum(potential_message.get_as_bytes()[:-1])
+            if checksum != calculated_checksum:
+                print("Checksum error")
+                continue
+            
             messages_from_rover.append(potential_message)
             print(f"Message added {potential_message}; len = {len(messages_from_rover)}")
     print("read thread quit")
@@ -186,9 +193,11 @@ def process_messages() -> None:
 
         if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
             if current_hdp_num < curr_msg.number:
+                print("found msg")
                 current_hdp_str += curr_msg.get_payload()
                 current_hdp_num += 1
             else:
+                print("went here instead")
                 current_hdp_num = 0
                 current_hdp_str += curr_msg.get_payload()
                 try:
