@@ -27,9 +27,9 @@ scheduler = Scheduler(ser=None, topics=None)
 
 def main():
     #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "/dev/tty.usbserial-B001VC58"
+    #port = "/dev/tty.usbserial-B001VC58"
     #port = "COM4"
-    #port = "/dev/ttyTHS1"
+    port = "/dev/ttyTHS1"
     baud = 57600
     timeout = 0.1
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -49,7 +49,7 @@ def main():
     scheduler.set_topics(topics=topics)
 
     executor = concurrent.futures.ThreadPoolExecutor(3)
-    future_scheduler = executor.submit(scheduler.send_messages)
+    future_scheduler = executor.submit(send_messages_via_scheduler)
     future_msg_process = executor.submit(process_messages)
 
     atexit.register(exit_handler, executor)
