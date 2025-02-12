@@ -36,6 +36,7 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
+    # respective 'int' identifiers for each topic
     topics = {
         "status": 3,
         "vid_feed": 10,
@@ -82,6 +83,7 @@ def main():
 
         ##### READ: CAMERA #####
         should_capture_image = False
+        # If true, capture image, split it into smaller messages (if needed), and send it.
         if should_capture_image:
             _, buffer = capture_image(90, resize_width=VID_WIDTH)
             if buffer == None:
@@ -90,7 +92,7 @@ def main():
 
 def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearray]:
     cap = cv2.VideoCapture(0)
-    ret, frame = cap.read()
+    ret, frame = cap.read() # ret is a boolean indicating if the frame was captured correctly
 
     if not ret:
         #print("Failed to capture image.")
@@ -104,7 +106,9 @@ def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearra
         frame = cv2.resize(frame, (resize_width, int(resize_factor * frame.shape[0])))
 
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-    encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
+    # encoded: boolean indicating whether the image capture was successful, 
+    # buffer contains compressed image data
+    encoded, buffer = cv2.imencode('.jpg', frame, encode_param) 
     size_of_data = len(buffer)
     #size_packed = struct.pack(">L", size_of_data)
     return size_of_data, buffer

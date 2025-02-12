@@ -81,7 +81,7 @@ class Message:
     
     def __str__(self):
         string = f"ID,{self.msg_id}:purpose,{self.purpose}:number,{self.number}:size,{self.size_of_payload}"
-        if not self:
+        if not self: # if the message is invalid
             string = f"INVALID|{string}"
         return string
     
