@@ -20,6 +20,7 @@ import atexit
 
 MSG_LOG = "messages_rover.log"
 VID_WIDTH = 200
+CAM_PATH = "/dev/v4l/by-id/usb-046d_081b_32750F50-video-index0"
 kill_threads = False
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
@@ -91,7 +92,7 @@ def main():
             scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=buffer, purpose_for_all=2))
 
 def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearray]:
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(CAM_PATH)
     ret, frame = cap.read() # ret is a boolean indicating if the frame was captured correctly
 
     if not ret:
