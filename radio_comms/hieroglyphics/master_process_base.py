@@ -156,12 +156,8 @@ def process_messages() -> None:
     current_hdp_str = b''
     current_hdp_num = 0
 
-<<<<<<< Updated upstream
-    while not kill_threads:
-=======
     # Continuously check for messages, process them according to their purpose.
     while True:
->>>>>>> Stashed changes
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
