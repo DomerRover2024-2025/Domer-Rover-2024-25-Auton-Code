@@ -137,6 +137,7 @@ def read_from_port(ser: serial.Serial):
 
             messages_from_rover.append(potential_message)
             print(f"Message added {potential_message}; len = {len(messages_from_rover)}")
+    print("read thread quit")
 
 ##### THE BRAINS FOR DECODING IMPORTED MESSAGES FROM ROVER
 def process_messages() -> None:
@@ -190,6 +191,8 @@ def process_messages() -> None:
         if curr_msg.purpose == 0: # indicates DEBUGGING
             payload = curr_msg.get_payload()
             print(payload.decode())
+    print("process msg thread quit")
+    
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
     try:
