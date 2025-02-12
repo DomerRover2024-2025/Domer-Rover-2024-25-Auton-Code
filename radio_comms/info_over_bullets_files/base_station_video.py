@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 ##### CONSTANTS ######
-HOST = "192.168.1.2"
+HOST = "192.168.11.17"
 PORT = 12346
 
 # create subscribe socket
