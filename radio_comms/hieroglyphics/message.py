@@ -86,7 +86,7 @@ class Message:
         return string
     
     @staticmethod
-    def calculate_checksum(self, bytestring: str):
+    def calculate_checksum(bytestring: str):
         return struct.pack(">B", reduce(lambda a,b: a ^ b, bytestring))
     
     @staticmethod

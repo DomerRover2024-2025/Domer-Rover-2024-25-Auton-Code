@@ -19,6 +19,7 @@ from datetime import datetime
 
 MSG_LOG = "messages_rover.log"
 VID_WIDTH = 200
+kill_threads = False
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
 scheduler = Scheduler(ser=None, topics=None)
@@ -116,7 +117,7 @@ def process_messages() -> None:
     # TODO: TODO TODO FIX THIS when connected to the jetson
     #arduino = serial.Serial('/dev/ttyACM0')
 
-    while True:
+    while not kill_threads:
         if len(messages_to_process) == 0:
             continue
         print("Processing message", len(messages_to_process))
@@ -161,9 +162,24 @@ def process_messages() -> None:
             payload = curr_msg.get_payload()
             print(payload.decode())
 
-    talkerNode.destroy_node()
-    rclpy.shutdown()
-    arduino.close()
+# weighted round robin algorithm?
+# implement with a thread, I think
+def send_messages_via_scheduler():
+    print("started up the wrr")
+    while not kill_threads:
+        for topic in scheduler.topics: # all the topic names
+            c = 0 # packet counter
+            while scheduler.messages[topic] and c < scheduler.topics[topic]:
+                try:
+                    curr_msg = scheduler.messages[topic].popleft()
+                    scheduler.ser.write(curr_msg.get_as_bytes())
+                    c += 1
+                    print(f"Message sent: {curr_msg}")
+                except Exception as e:
+                    print(e)
+    # talkerNode.destroy_node()
+    # rclpy.shutdown()
+    # arduino.close()
 
 # import rclpy
 # from rclpy.node import Node
