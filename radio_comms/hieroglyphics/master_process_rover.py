@@ -147,12 +147,17 @@ def process_messages() -> None:
         
         if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
             length, buffer = capture_image(90)
-            if buffer == None:
+            print("Image captured")
+            if buffer is None:
+                print("error no image could be grabbed")
                 error_str = "Error: could not capture a high definition photo."
                 scheduler.add_single_message(Message(purpose=0, payload=error_str.encode()))
-            msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=4)
-            scheduler.add_list_of_messages("hdp", msgs)
-            print("Message added of length ", len(buffer.tobytes()))
+            else:
+                print("splitting messages")
+                msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=4)
+                print("messages split")
+                scheduler.add_list_of_messages("hdp", msgs)
+                print("Message added of length ", len(buffer.tobytes()))
         
         if curr_msg.purpose == 6: # indicates TAKE ME A BAD PHOTO
             length, buffer = capture_image(90, resize_width=VID_WIDTH)
