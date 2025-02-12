@@ -15,6 +15,7 @@ from message import Message
 from scheduler import Scheduler
 from collections import deque
 from datetime import datetime
+import atexit
 #np.set_printoptions(threshold=sys.maxsize)
 
 MSG_LOG = "messages_rover.log"
@@ -49,6 +50,8 @@ def main():
     executor = concurrent.futures.ThreadPoolExecutor(3)
     future_scheduler = executor.submit(scheduler.send_messages)
     future_msg_process = executor.submit(process_messages)
+
+    atexit.register(exit_handler, executor)
     print("entering while loop")
     while True:
 
@@ -204,6 +207,10 @@ def send_messages_via_scheduler():
 #         # self.write(msg.data)
 #      #def write(x):
 #         self.serialPort.write(msg.data.encode())
+
+def exit_handler(executor : concurrent.futures.ThreadPoolExecutor):
+    kill_threads = True
+    executor.shutdown()
 
 
 if __name__ == "__main__":

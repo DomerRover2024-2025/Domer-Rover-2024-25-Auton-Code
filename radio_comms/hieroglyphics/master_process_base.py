@@ -23,6 +23,7 @@ import capture_controls
 import subprocess
 import concurrent.futures
 from datetime import datetime
+import atexit
 
 #######################
 ##### GLOBAL VARS #####
@@ -31,6 +32,7 @@ from datetime import datetime
 messages_from_rover = deque()
 MSG_LOG = "messages_base.log"
 ERR_LOG = "errors_from_rover.log"
+kill_threads = False
 
 ################
 ##### MAIN #####
@@ -51,6 +53,7 @@ def main():
     executor = concurrent.futures.ThreadPoolExecutor(3)
     future = executor.submit(process_messages)
     future = executor.submit(read_from_port, ser)
+    atexit.register(exit_main, executor)
 
     # the main control
     while True:
@@ -112,7 +115,7 @@ def main():
 
 ##### READ FROM THE SERIAL PORT for incoming messages
 def read_from_port(ser: serial.Serial):
-    while True:
+    while not kill_threads:
         b_input = ser.read(1)
         if len(b_input) != 0:
             potential_message = Message(new=False)
@@ -145,7 +148,7 @@ def process_messages() -> None:
     current_hdp_str = b''
     current_hdp_num = 0
 
-    while True:
+    while not kill_threads:
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
@@ -205,6 +208,7 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
 
 # everything to do on shutdown
 def exit_main(executor : concurrent.futures.ThreadPoolExecutor):
+    kill_threads = True
     executor.shutdown()
 
 def print_options() -> None:
