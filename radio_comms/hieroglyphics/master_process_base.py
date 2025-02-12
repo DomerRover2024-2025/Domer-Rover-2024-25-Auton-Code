@@ -193,9 +193,11 @@ def process_messages() -> None:
 
         if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
             if current_hdp_num < curr_msg.number:
+                print("found msg")
                 current_hdp_str += curr_msg.get_payload()
                 current_hdp_num += 1
             else:
+                print("went here instead")
                 current_hdp_num = 0
                 current_hdp_str += curr_msg.get_payload()
                 try:
