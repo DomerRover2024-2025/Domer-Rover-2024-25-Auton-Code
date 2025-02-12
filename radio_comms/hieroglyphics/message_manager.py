@@ -4,6 +4,7 @@ from datetime import datetime
 
 class MessageManager:
     def __init__(self, messages=deque()):
+        # below line: a typehint, #comment, for a deque of Message objects
         self.messages : deque[Message] = deque(messages)
         self.log_name = "messages.log"
         with open(self.log_name, 'w') as f:

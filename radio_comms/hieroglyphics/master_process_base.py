@@ -48,8 +48,11 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
+    # make sure the log file is empty
     open(MSG_LOG, 'w').close()
 
+    # 3 concurrent threads: one read from serial port, 
+    # one for processing messages, one for writing messages
     executor = concurrent.futures.ThreadPoolExecutor(3)
     future = executor.submit(process_messages)
     future = executor.submit(read_from_port, ser)
@@ -57,6 +60,7 @@ def main():
 
     # the main control
     while True:
+        # Continuously display options and ask for user input
         print_options()
         request = input(">> ")
         
@@ -74,10 +78,11 @@ def main():
                 # connec to controller?
             capture_controls.pygame.init()
             capture_controls.pygame.joystick.init()
+            # get joystick
             gen = capture_controls.run({}, 1, False)
 
             while True:
-                lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen)
+                lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen) # get joystick values
                 b_lspeed = struct.pack(">h", lspeed)
                 b_rspeed = struct.pack(">h", rspeed)
                 b_scalar = struct.pack(">f", scalar)
@@ -93,6 +98,7 @@ def main():
 
                 ser.write(ctrls_msg.get_as_bytes())
 
+        # Send test messages
         elif request == "test":
             while True:
                 hello = input("enter tester phrase, exit to exit: ")
@@ -117,6 +123,7 @@ def main():
 def read_from_port(ser: serial.Serial):
     while not kill_threads:
         b_input = ser.read(1)
+        # ID, PURPOSE, NUMBER, SIZE, PAYLOAD, CHECKSUM
         if len(b_input) != 0:
             potential_message = Message(new=False)
             b_input += ser.read(1)
@@ -149,7 +156,12 @@ def process_messages() -> None:
     current_hdp_str = b''
     current_hdp_num = 0
 
+<<<<<<< Updated upstream
     while not kill_threads:
+=======
+    # Continuously check for messages, process them according to their purpose.
+    while True:
+>>>>>>> Stashed changes
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
@@ -163,6 +175,7 @@ def process_messages() -> None:
             pass
 
         if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
+            # curr_msg.number: number of 'packets' needed to reconstruct the image
             if current_video_feed_num < curr_msg.number:
                 current_video_feed_str += curr_msg.get_payload()
                 current_video_feed_num += 1
@@ -197,6 +210,9 @@ def process_messages() -> None:
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
     try:
         #buffer = buffer.frombytes()
+        # Convert the byte array to an integer numpy array 
+        # (decoded image with ".imdecode", written to a file (".imwrite")
+        # and displayed (".imshow"))
         image = np.frombuffer(buffer, dtype=np.uint8)
         frame = cv2.imdecode(image, 1)
         if not os.path.isdir(f"{type}"):
