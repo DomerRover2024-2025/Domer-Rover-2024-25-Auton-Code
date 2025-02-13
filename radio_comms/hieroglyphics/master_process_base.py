@@ -39,11 +39,11 @@ kill_threads = False
 ################
 
 def main():
-    #port = "/dev/tty.usbserial-BG00HO5R"
-    port = "/dev/cu.usbserial-B001VC58"
+    port = "/dev/cu.usbserial-BG00HO5R"
+    #port = "/dev/cu.usbserial-B001VC58"
     #port = "COM3"
     baud = 57600
-    timeout = 0.01
+    timeout = 0.1
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
@@ -124,33 +124,39 @@ def read_from_port(ser: serial.Serial):
     while not kill_threads:
         b_input = ser.read(1)
         # ID, PURPOSE, NUMBER, SIZE, PAYLOAD, CHECKSUM
-        if len(b_input) != 0:
-            potential_message = Message(new=False)
-            b_input += ser.read(1)
-            potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
-            b_input = ser.read(1)
-            potential_message.set_purpose(b_input)
-            b_input = ser.read(1)
-            potential_message.number = struct.unpack(">B", b_input)[0]
-            b_input = ser.read(struct.calcsize(">L"))
-            potential_message.set_size(b_input)
-            payload = b''
-            # print(potential_message.size_of_payload)
-            while len(payload) < potential_message.size_of_payload:
-                payload += ser.read(potential_message.size_of_payload - len(payload))
-            # print(len(payload))
-            potential_message.set_payload(payload)
-            checksum = ser.read(1)
+        if len(b_input) == 0:
+            continue
+        print("Got a message")
+        pot_msg = Message(new=False)
+        b_input += ser.read(1)
+        pot_msg.set_msg_id(struct.unpack(">H", b_input)[0])
+        print("Got id")
+        b_input = ser.read(1)
+        pot_msg.set_purpose(b_input)
+        print("Got purpose")
+        b_input = ser.read(1)
+        pot_msg.number = struct.unpack(">B", b_input)[0]
+        print("Got number")
+        b_input = ser.read(struct.calcsize(">L"))
+        print(struct.calcsize(">L"))
+        pot_msg.set_size(b_input)
+        print("Got size", pot_msg.size_of_payload)
+        payload = b''
+        # print(pot_msg.size_of_payload)
+        while len(payload) < pot_msg.size_of_payload:
+            payload += ser.read(pot_msg.size_of_payload - len(payload))
+        # print(len(payload))
+        pot_msg.set_payload(payload)
+        print("Got payload")
+        checksum = ser.read(1)
+        print("Got checksum")
 
-            print(Message.test_checksum(potential_message))
-            print(checksum)
-            calculated_checksum = Message.calculate_checksum(potential_message.get_as_bytes()[:-1])
-            if checksum != calculated_checksum:
-                print("Checksum error")
-                continue
-            
-            messages_from_rover.append(potential_message)
-            print(f"Message added {potential_message}; len = {len(messages_from_rover)}")
+        print(checksum)
+        if not Message.test_checksum(bytestring=pot_msg.get_as_bytes()[:-1], checksum=checksum):
+            print("Checksum error")
+            continue
+        messages_from_rover.append(pot_msg)
+        print(f"Message added {pot_msg}; len = {len(messages_from_rover)}")
     print("read thread quit")
 
 ##### THE BRAINS FOR DECODING IMPORTED MESSAGES FROM ROVER
@@ -164,7 +170,7 @@ def process_messages() -> None:
     current_hdp_num = 0
 
     # Continuously check for messages, process them according to their purpose.
-    while True:
+    while not kill_threads:
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
