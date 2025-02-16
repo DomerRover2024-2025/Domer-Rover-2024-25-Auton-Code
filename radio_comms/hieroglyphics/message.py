@@ -96,19 +96,19 @@ class Message:
 
     @staticmethod
     def message_split(big_payload : bytearray, purpose_for_all : int):
-        MAX_SIZE = 8192
+        MAX_SIZE = 4096
         print(len(big_payload))
 
         number : int = 1
         message_list = []
         
         while len(big_payload) > MAX_SIZE:
-            payload_temp = big_payload[:8192]
+            payload_temp = big_payload[:MAX_SIZE]
             message_list.append(Message(purpose=purpose_for_all,payload=payload_temp,number=number))
 
             # message_list[number-1] = bytestring[0:3] + b_num + b_size + bytestring[current_b:current_b+8192] + bytestring[-1]
 
-            big_payload = big_payload[8192:]
+            big_payload = big_payload[MAX_SIZE:]
             number += 1
 
         message_list.append(Message(purpose=purpose_for_all, payload=big_payload, number=0))
