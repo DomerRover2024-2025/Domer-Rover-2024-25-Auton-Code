@@ -151,7 +151,7 @@ def process_messages() -> None:
             if buffer is None:
                 print("error no image could be grabbed")
                 error_str = "Error: could not capture a high definition photo."
-                scheduler.add_single_message(Message(purpose=0, payload=error_str.encode()))
+                scheduler.add_single_message("status", Message(purpose=0, payload=error_str.encode()))
             else:
                 print("splitting messages")
                 msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=4)
@@ -163,7 +163,7 @@ def process_messages() -> None:
             length, buffer = capture_image(90, resize_width=VID_WIDTH)
             if buffer == None:
                 error_str = "Error: could not capture a high definition photo."
-                scheduler.add_single_message(Message(purpose=0, payload=error_str.encode()))
+                scheduler.add_single_message("status", Message(purpose=0, payload=error_str.encode()))
             
             msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=6)
             scheduler.add_list_of_messages("ldp", msgs)
@@ -174,6 +174,8 @@ def process_messages() -> None:
             print("debugging message")
             payload = curr_msg.get_payload()
             print(payload.decode())
+            return_str = "why no work"
+            scheduler.add_single_message("status", Message(purpose=0, payload=return_str.encode()))
 
 # weighted round robin algorithm?
 # implement with a thread, I think
@@ -187,7 +189,8 @@ def send_messages_via_scheduler():
                     curr_msg = scheduler.messages[topic].popleft()
                     scheduler.ser.write(curr_msg.get_as_bytes())
                     c += 1
-                    print(f"Message sent: {curr_msg}")
+                    print(f"{curr_msg.get_as_bytes()[4:8]}")
+                    print(f"Message sent: {curr_msg} of length {curr_msg.size_of_payload}")
                 except Exception as e:
                     print(e)
     # talkerNode.destroy_node()
