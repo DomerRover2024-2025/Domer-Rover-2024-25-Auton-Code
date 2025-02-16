@@ -63,37 +63,40 @@ def main():
             b_input = ser.read(1)
             if len(b_input) == 0:
                 continue
-            potential_message = Message(new=False)
+            pot_msg = Message(new=False)
             b_input += ser.read(1)
-            potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
+            pot_msg.set_msg_id(struct.unpack(">H", b_input)[0])
             b_input = ser.read(1)
-            potential_message.set_purpose(b_input)
+            pot_msg.set_purpose(b_input)
             b_input = ser.read(1)
-            potential_message.number = struct.unpack(">B", b_input)[0]
+            pot_msg.number = struct.unpack(">B", b_input)[0]
             b_input = ser.read(struct.calcsize(">L"))
-            potential_message.set_size(b_input)
+            pot_msg.set_size(b_input)
             payload = b''
 
-            while len(payload) < potential_message.size_of_payload:
-                payload += ser.read(potential_message.size_of_payload - len(payload))
+            while len(payload) < pot_msg.size_of_payload:
+                payload += ser.read(pot_msg.size_of_payload - len(payload))
                 if kill_threads:
                     return
 
-            potential_message.set_payload(payload)
-            potential_message.checksum = ser.read(1)
+            pot_msg.set_payload(payload)
+            checksum = ser.read(1)
+            if not Message.test_checksum(bytestring=pot_msg.get_as_bytes()[:-1], checksum=checksum):
+                print("Checksum error")
+                continue
 
             # TODO replace with a message manager
-            messages_to_process.append(potential_message)
+            messages_to_process.append(pot_msg)
             print(f"Message added")
 
-            ##### READ: CAMERA #####
-            should_capture_image = False
-            # If true, capture image, split it into smaller messages (if needed), and send it.
-            if should_capture_image:
-                _, buffer = capture_image(90, resize_width=VID_WIDTH)
-                if buffer == None:
-                    continue
-                scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=buffer, purpose_for_all=2))
+            # ##### READ: CAMERA #####
+            # should_capture_image = False
+            # # If true, capture image, split it into smaller messages (if needed), and send it.
+            # if should_capture_image:
+            #     _, buffer = capture_image(90, resize_width=VID_WIDTH)
+            #     if buffer == None:
+            #         continue
+            #     scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=buffer, purpose_for_all=2))
     
     except KeyboardInterrupt or Exception:
         exit(0)
