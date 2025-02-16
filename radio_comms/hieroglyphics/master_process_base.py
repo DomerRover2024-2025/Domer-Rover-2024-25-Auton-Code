@@ -241,7 +241,7 @@ def process_messages() -> None:
                 ldp_num = 0
                 ldp_str += curr_msg.get_payload()
                 try:
-                    save_and_output_image(hdp_str, "hdp")
+                    save_and_output_image(ldp_str, "ldp")
                 except Exception as e:
                     print(e)
                 hdp_str = b''
@@ -254,11 +254,16 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
         # (decoded image with ".imdecode", written to a file (".imwrite")
         # and displayed (".imshow"))
         image = np.frombuffer(buffer, dtype=np.uint8)
+        print("unbuffered image, len", len(buffer))
         frame = cv2.imdecode(image, 1)
+        print("decoded image")
         if not os.path.isdir(f"{type}"):
             os.mkdir(f"{type}")
+        print("made directory")
         cv2.imwrite(f"{type}/{time.time()}.jpg", frame)
+        print("saved image")
         cv2.imshow(f'{type}', frame)
+        print('showed image')
         cv2.waitKey(1)
         return True
     except Exception as e:

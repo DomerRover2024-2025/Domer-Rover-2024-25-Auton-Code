@@ -61,30 +61,30 @@ def main():
 
             ##### READ: SERIAL PORT #####
             b_input = ser.read(1)
-            if len(b_input) != 0:
+            if len(b_input) == 0:
+                continue
+            potential_message = Message(new=False)
+            b_input += ser.read(1)
+            potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
+            b_input = ser.read(1)
+            potential_message.set_purpose(b_input)
+            b_input = ser.read(1)
+            potential_message.number = struct.unpack(">B", b_input)[0]
+            b_input = ser.read(struct.calcsize(">L"))
+            potential_message.set_size(b_input)
+            payload = b''
 
-                potential_message = Message(new=False)
-                b_input += ser.read(1)
-                potential_message.set_msg_id(struct.unpack(">H", b_input)[0])
-                b_input = ser.read(1)
-                potential_message.set_purpose(b_input)
-                b_input = ser.read(1)
-                potential_message.number = struct.unpack(">B", b_input)[0]
-                b_input = ser.read(struct.calcsize(">L"))
-                potential_message.set_size(b_input)
-                payload = b''
+            while len(payload) < potential_message.size_of_payload:
+                payload += ser.read(potential_message.size_of_payload - len(payload))
+                if kill_threads:
+                    return
 
-                while len(payload) < potential_message.size_of_payload:
-                    payload += ser.read(potential_message.size_of_payload - len(payload))
-                    if kill_threads:
-                        return
+            potential_message.set_payload(payload)
+            potential_message.checksum = ser.read(1)
 
-                potential_message.set_payload(payload)
-                potential_message.checksum = ser.read(1)
-
-                # TODO replace with a message manager
-                messages_to_process.append(potential_message)
-                print(f"Message added")
+            # TODO replace with a message manager
+            messages_to_process.append(potential_message)
+            print(f"Message added")
 
             ##### READ: CAMERA #####
             should_capture_image = False
