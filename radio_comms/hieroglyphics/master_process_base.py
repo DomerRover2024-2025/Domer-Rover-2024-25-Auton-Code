@@ -58,62 +58,66 @@ def main():
     future = executor.submit(read_from_port, ser)
     atexit.register(exit_main, executor)
 
-    # the main control
-    while True:
-        # Continuously display options and ask for user input
-        print_options()
-        request = input(">> ")
-        
-        if request == 'quit':
-            exit_main(executor=executor)
-            return 0
+    try:
+            
+        # the main control
+        while True:
+            # Continuously display options and ask for user input
+            print_options()
+            request = input(">> ")
+            
+            if request == 'quit':
+                exit_main(executor=executor)
+                return 0
 
-        # this request is for debugging, and prints the remaining contents
-        # of the buffer into a file
-        if request == 'log':
-            tail_output = subprocess.run(["tail", '-n', 10, MSG_LOG], capture_output=True, text=True)
-            print(tail_output.stdout)
+            # this request is for debugging, and prints the remaining contents
+            # of the buffer into a file
+            if request == 'log':
+                tail_output = subprocess.run(["tail", '-n', 10, MSG_LOG], capture_output=True, text=True)
+                print(tail_output.stdout)
 
-        elif request == "dr":
-                # connec to controller?
-            capture_controls.pygame.init()
-            capture_controls.pygame.joystick.init()
-            # get joystick
-            gen = capture_controls.run({}, 1, False)
+            elif request == "dr":
+                    # connec to controller?
+                capture_controls.pygame.init()
+                capture_controls.pygame.joystick.init()
+                # get joystick
+                gen = capture_controls.run({}, 1, False)
 
-            while True:
-                lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen) # get joystick values
-                b_lspeed = struct.pack(">h", lspeed)
-                b_rspeed = struct.pack(">h", rspeed)
-                b_scalar = struct.pack(">f", scalar)
-                b_camleft = struct.pack(">B", camleft)
-                b_camright = struct.pack(">B", camright)
-                b_button_x = struct.pack(">B", camright)
-                b_button_y = struct.pack(">B", camright)
-                payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
+                while True:
+                    lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen) # get joystick values
+                    b_lspeed = struct.pack(">h", lspeed)
+                    b_rspeed = struct.pack(">h", rspeed)
+                    b_scalar = struct.pack(">f", scalar)
+                    b_camleft = struct.pack(">B", camleft)
+                    b_camright = struct.pack(">B", camright)
+                    b_button_x = struct.pack(">B", camright)
+                    b_button_y = struct.pack(">B", camright)
+                    payload = b_lspeed + b_rspeed + b_scalar + b_camleft + b_camright + b_button_x + b_button_y
 
-                # pack up the message
-                ctrls_msg = Message(new=True, purpose=1, payload=payload)
-                print(ctrls_msg.get_as_bytes())
+                    # pack up the message
+                    ctrls_msg = Message(new=True, purpose=1, payload=payload)
+                    print(ctrls_msg.get_as_bytes())
 
-                ser.write(ctrls_msg.get_as_bytes())
+                    ser.write(ctrls_msg.get_as_bytes())
 
-        # Send test messages
-        elif request == "test":
-            while True:
-                hello = input("enter tester phrase, exit to exit: ")
-                if hello == "exit":
-                    break
-                msg = Message(purpose=0, payload=hello.encode())
+            # Send test messages
+            elif request == "test":
+                while True:
+                    hello = input("enter tester phrase, exit to exit: ")
+                    if hello == "exit":
+                        break
+                    msg = Message(purpose=0, payload=hello.encode())
+                    ser.write(msg.get_as_bytes())
+            
+            elif request == "hdp":
+                msg = Message(new=True, purpose=4, payload=bytes(1))
                 ser.write(msg.get_as_bytes())
-        
-        elif request == "hdp":
-            msg = Message(new=True, purpose=4, payload=bytes(1))
-            ser.write(msg.get_as_bytes())
-        
-        elif request == "ldp":
-            msg = Message(new=True, purpose=6, payload=bytes(1))
-            ser.write(msg.get_as_bytes())
+            
+            elif request == "ldp":
+                msg = Message(new=True, purpose=6, payload=bytes(1))
+                ser.write(msg.get_as_bytes())
+    except KeyboardInterrupt or Exception:
+        exit(0)
 
 #####################
 ##### FUNCTIONS #####
@@ -122,6 +126,7 @@ def main():
 ##### READ FROM THE SERIAL PORT for incoming messages
 def read_from_port(ser: serial.Serial):
     while not kill_threads:
+
         b_input = ser.read(1)
         # ID, PURPOSE, NUMBER, SIZE, PAYLOAD, CHECKSUM
         if len(b_input) == 0:
@@ -145,6 +150,8 @@ def read_from_port(ser: serial.Serial):
         # print(pot_msg.size_of_payload)
         while len(payload) < pot_msg.size_of_payload:
             payload += ser.read(pot_msg.size_of_payload - len(payload))
+            if kill_threads:
+                return
         # print(len(payload))
         pot_msg.set_payload(payload)
         print("Got payload")
@@ -157,7 +164,6 @@ def read_from_port(ser: serial.Serial):
             continue
         messages_from_rover.append(pot_msg)
         print(f"Message added {pot_msg}; len = {len(messages_from_rover)}")
-    print("read thread quit")
 
 ##### THE BRAINS FOR DECODING IMPORTED MESSAGES FROM ROVER
 def process_messages() -> None:
@@ -171,6 +177,7 @@ def process_messages() -> None:
 
     # Continuously check for messages, process them according to their purpose.
     while not kill_threads:
+
         if len(messages_from_rover) == 0:
             continue
         curr_msg : Message = messages_from_rover.popleft()
@@ -211,11 +218,6 @@ def process_messages() -> None:
                 except Exception as e:
                     print(e)
                 current_hdp_str = b''
-
-        if curr_msg.purpose == 0: # indicates DEBUGGING
-            payload = curr_msg.get_payload()
-            print(payload.decode())
-    print("process msg thread quit")
     
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
@@ -238,8 +240,9 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
 
 # everything to do on shutdown
 def exit_main(executor : concurrent.futures.ThreadPoolExecutor):
+    global kill_threads
     kill_threads = True
-    executor.shutdown()
+    executor.shutdown(wait=False, cancel_futures=True)
 
 def print_options() -> None:
     print("----------------")
@@ -259,7 +262,6 @@ def print_options() -> None:
     print("(hbt) Heartbeat mode: Receive coordinates")
     print("(test) Send over tester strings for debugging purposes")
     print("(literally anything else) See menu options again")
-
 
 if __name__ == "__main__":
     main()
