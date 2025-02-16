@@ -76,6 +76,8 @@ def main():
 
                 while len(payload) < potential_message.size_of_payload:
                     payload += ser.read(potential_message.size_of_payload - len(payload))
+                    if kill_threads:
+                        return
 
                 potential_message.set_payload(payload)
                 potential_message.checksum = ser.read(1)
