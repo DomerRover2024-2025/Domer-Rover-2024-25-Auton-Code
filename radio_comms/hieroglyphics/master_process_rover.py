@@ -84,7 +84,7 @@ def main():
 
                 # TODO replace with a message manager
                 messages_to_process.append(potential_message)
-                print(f"Message added: {potential_message.get_as_bytes()}")
+                print(f"Message added")
 
             ##### READ: CAMERA #####
             should_capture_image = False
@@ -100,6 +100,7 @@ def main():
 
 def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearray]:
     cap = cv2.VideoCapture(CAM_PATH)
+    #cap = cv2.VideoCapture(0)
     ret, frame = cap.read() # ret is a boolean indicating if the frame was captured correctly
 
     if not ret:
@@ -167,14 +168,20 @@ def process_messages() -> None:
                 print("Message added of length ", len(buffer.tobytes()))
         
         if curr_msg.purpose == 6: # indicates TAKE ME A BAD PHOTO
-            length, buffer = capture_image(90, resize_width=VID_WIDTH)
-            if buffer == None:
+            try:
+                length, buffer = capture_image(90, resize_width=VID_WIDTH)
+            except Exception as e:
+                print(e)
+            if buffer is None:
                 error_str = "Error: could not capture a high definition photo."
                 scheduler.add_single_message("status", Message(purpose=0, payload=error_str.encode()))
-            
-            msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=6)
-            scheduler.add_list_of_messages("ldp", msgs)
-            print("Message added of length ", len(buffer.tobytes()))
+            else:
+                try:
+                    msgs =  Message.message_split(big_payload=buffer.tobytes(), purpose_for_all=6)
+                    scheduler.add_list_of_messages("ldp", msgs)
+                    print("Message added of length ", len(buffer.tobytes()))
+                except Exception as e:
+                    print(e)
 
             #arduino_ser.write(msg.encode())
         if curr_msg.purpose == 0: # indicates DEBUGGING to the rover
