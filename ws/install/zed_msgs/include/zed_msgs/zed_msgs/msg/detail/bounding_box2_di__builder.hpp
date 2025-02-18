@@ -1,1 +1,0 @@
-/home/domerrover/ws/build/zed_msgs/rosidl_generator_cpp/zed_msgs/msg/detail/bounding_box2_di__builder.hpp

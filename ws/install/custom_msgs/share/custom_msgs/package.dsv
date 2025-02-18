@@ -1,6 +1,0 @@
-source;share/custom_msgs/hook/cmake_prefix_path.ps1
-source;share/custom_msgs/hook/cmake_prefix_path.dsv
-source;share/custom_msgs/hook/cmake_prefix_path.sh
-source;share/custom_msgs/hook/ld_library_path_lib.ps1
-source;share/custom_msgs/hook/ld_library_path_lib.dsv
-source;share/custom_msgs/hook/ld_library_path_lib.sh

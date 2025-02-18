@@ -1,1 +1,0 @@
-/home/domerrover/ws/build/zed_msgs/rosidl_generator_cpp/zed_msgs/srv/detail/set_roi__struct.hpp

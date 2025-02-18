@@ -7,12 +7,17 @@ import math
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from std_msgs.msg import String
+
+
 
 class TalkerNode(Node):
     def __init__(self):
         super().__init__("joystick_node")
-        self.publisher_ = self.create_publisher(String, 'manual_controller_input', 10)
+        qos_profile = QoSProfile(depth=10)
+        qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
+        self.publisher_ = self.create_publisher(String, 'manual_controller_input', qos_profile)
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.count = 0
@@ -23,6 +28,7 @@ class TalkerNode(Node):
         self.joy_y = 0
         
         self.triggerMult = 0
+
         self.b_x = 0
         self.b_circle = 0
         self.b_triangle = 0
@@ -33,10 +39,18 @@ class TalkerNode(Node):
         msg = String()
         msg.data = f"{self.joy_x} {self.joy_y} {self.triggerMult} {self.b_x} {self.b_circle} {self.b_triangle} {self.b_square}\n"
 
-        #msg.data = f"Hello everyone {self.count}"
         self.publisher_.publish(msg)
         self.count += 1
         self.get_logger().info(f"Publishing {msg.data}")
+        
+    def update_joystick_values(self, joy_x, joy_y, triggerMult, b_x, b_circle, b_triangle, b_square):
+        self.joy_x = joy_x
+        self.joy_y = joy_y
+        self.triggerMult = triggerMult
+        self.b_x = b_x
+        self.b_circle = b_circle
+        self.b_triangle = b_triangle
+        self.b_square = b_square
 
 def deadzone(button):
     c_deadzone = 0.05
@@ -48,14 +62,6 @@ def deadzone(button):
     else:
         return round(button, c_roundAxis)
 
-
-def init():
-    # initialization
-
-    j = pygame.joystick.Joystick(0)
-    joysticks = {}
-    return joysticks #, text_print, screen
-
 def valueMap(val):
     return int(val * 255)
 
@@ -64,10 +70,8 @@ def cart2pol(x, y):
     angle = math.atan2(y, x) * (180 / math.pi)  # Convert angle to degrees
     return (int(255 * radius), int((angle + 360) % 360))
 
-
 def calcWheelSpeeds(magnitude, angle):
-    # Ensure magnitude is between 0 and 1
-    magnitude = min(magnitude, 1)
+    magnitude = magnitude / 255
 
     # Normalize angle to range [0, 360)
     angle = angle % 360
@@ -93,16 +97,7 @@ def calcWheelSpeeds(magnitude, angle):
     if angle < 30:
         left_speed = left_speed * max(0.3, angle/30)
 
-    return left_speed, right_speed
-
-def sendDriveSignals(left, right):
-    dutyCycleLeft = valueMap(left)
-    dutyCycleRight = valueMap(right)
-        
-    # print(f"LPower: {left:.3f} RPower: {right:.3f} dutyLeft: {dutyCycleLeft} dutyRight: {dutyCycleRight}, ")
-    
-    return dutyCycleLeft, dutyCycleRight
-
+    return valueMap(left_speed), valueMap(right_speed)
 
 
 def run(joysticks, publisher, triggerMult, stopFlag):
@@ -133,8 +128,8 @@ def run(joysticks, publisher, triggerMult, stopFlag):
         if 0 in joysticks:
             guid = joysticks[0].get_guid()
 
-        a_lt1 = deadzone(joysticks[0].get_axis(4) + 1)
-        a_rt1 = deadzone(joysticks[0].get_axis(5) + 1)
+        a_lt1 = deadzone(joysticks[0].get_axis(5) + 1)
+        a_rt1 = deadzone(joysticks[0].get_axis(4) + 1)
         
         b_lbumper1 = joysticks[0].get_button(9)
         b_rbumper1 = joysticks[0].get_button(10)
@@ -150,65 +145,67 @@ def run(joysticks, publisher, triggerMult, stopFlag):
 
         b_x1 = joysticks[0].get_button(0)
         b_circle1 = joysticks[0].get_button(1)
-        b_square1 = joysticks[0].get_button(2)
-        b_triangle1 = joysticks[0].get_button(3)
+        b_square1 = joysticks[0].get_button(3)
+        b_triangle1 = joysticks[0].get_button(2)
 
         b_padUp1 = joysticks[0].get_button(11)
         b_padDown1= joysticks[0].get_button(12)
-        b_padLeft1 = joysticks[0].get_button(13)
+        #b_padLeft1 = joysticks[0].get_button(13)
         # b_padRight1 = joysticks[0].get_button(14)
-
         # b_touchpad1 = joysticks[0].get_button(15)
 
         #joystick_data = [a_lt1, a_rt1, b_lbumper1, b_rbumper1, a_leftx1, a_lefty1, a_rightx1, a_righty1, b_leftIn1, b_rightIn1, b_x1, b_circle1, b_square1, b_triangle1, b_padUp1, b_padDown1, b_padLeft1, b_padRight1]
         mag, angle = cart2pol(a_leftx1, a_lefty1)
-        angleRads = math.radians(angle)
+        dutyCycleLeft, dutyCycleRight = calcWheelSpeeds(mag, angle) # converts magnitude/angle into left and right speeds
+        # if needed - new function for individual wheel control
 
-        triggerMult = triggerMult - a_lt1*0.01 + a_rt1*0.01	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
-        
+        if a_rt1 > 0.1:
+            triggerMult = round(triggerMult - 0.01, 5)	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
         triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x
         
+
         if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
             pass
         if b_padDown1 == 1:
             pass
-        if b_padLeft1 == 1:
-            pass
+        #if b_padLeft1 == 1:
+        #    pass
         # if b_padRight1 == 1:
         #     pass
         
         
-        
-        left_power, right_power = calcWheelSpeeds(mag, angle)
         if b_leftIn1 == 1 and stopFlag == False:
             stopFlag = True
             
         if stopFlag == True:
-            left_power, right_power = 0, 0
+            # dutyCycleLeft, dutyCycleRight = 0, 0
+            pass
             
-        dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
-
-
         # ORDER OF SENDING DATA OVER SERIAL
         # dutyCycleLeft, dutyCycleRight, triggerMult, b_x1, b_circle1, b_square1, b_triangle1, b_lbumper1, b_rbumper1, b_padUp1, b_padDown1, b_padLeft1
         #
         #
         #
-
-        publisher.joy_x = int(dutyCycleLeft * 0.15)  
-        publisher.joy_y = int(dutyCycleRight * 0.15)
-        publisher.triggerMult = float(triggerMult)
-        publisher.b_x = int(b_x1)
-        publisher.b_circle = int(b_circle1)
-        publisher.b_triangle = int(b_triangle1)
-        publisher.b_square = int(b_square1)
+        publisher.update_joystick_values(int(dutyCycleLeft * 0.15), 
+                                         int(dutyCycleRight * 0.15), 
+                                         float(triggerMult), 
+                                         int(b_x1), 
+                                         int(b_circle1), 
+                                         int(b_triangle1), 
+                                         int(b_square1))
+        # publisher.joy_x = int(dutyCycleLeft * 0.15)  
+        # publisher.joy_y = int(dutyCycleRight * 0.15)
+        # publisher.triggerMult = float(triggerMult)
+        # publisher.b_x = int(b_x1)
+        # publisher.b_circle = int(b_circle1)
+        # publisher.b_triangle = int(b_triangle1)
+        # publisher.b_square = int(b_square1)
         rclpy.spin_once(publisher)
         
         
 
 def main():
-    # host = "10.7.4.66"
-    # port = 8088
+
 
     rclpy.init()
     #create nodes
@@ -216,7 +213,7 @@ def main():
 
     pygame.init()
     pygame.joystick.init()
-    # joysticks = init()
+
     joysticks = {}
     run(joysticks, joystickNode, 1, stopFlag=False)
     pygame.quit()

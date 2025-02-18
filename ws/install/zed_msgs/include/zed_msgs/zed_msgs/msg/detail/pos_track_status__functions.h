@@ -1,1 +1,0 @@
-/home/domerrover/ws/build/zed_msgs/rosidl_generator_c/zed_msgs/msg/detail/pos_track_status__functions.h

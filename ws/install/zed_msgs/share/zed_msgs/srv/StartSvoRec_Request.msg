@@ -1,1 +1,0 @@
-/home/domerrover/ws/build/zed_msgs/rosidl_cmake/srv/StartSvoRec_Request.msg

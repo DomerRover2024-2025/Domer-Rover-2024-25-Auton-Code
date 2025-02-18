@@ -1,1 +1,0 @@
-/home/domerrover/ws/src/custom_msgs/msg/Coords.msg

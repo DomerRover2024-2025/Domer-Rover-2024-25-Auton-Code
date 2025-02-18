@@ -1,5 +1,6 @@
 #!/bin/bash
 
-colcon build --packages-select motor_package motor_package 
+colcon build --packages-select motor_package 
 source ./ws/install/setup.bash
+source ~/.bashrc
 ros2 run motor_package joystickTalker

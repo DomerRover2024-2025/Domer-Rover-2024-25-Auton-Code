@@ -1,1 +1,0 @@
-/home/domerrover/ws/build/custom_msgs/rosidl_typesupport_fastrtps_cpp/custom_msgs/msg/detail/coords__rosidl_typesupport_fastrtps_cpp.hpp

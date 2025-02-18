@@ -4,6 +4,3 @@ source;share/gps_pub_sub/hook/pythonpath.sh
 source;share/gps_pub_sub/hook/ament_prefix_path.ps1
 source;share/gps_pub_sub/hook/ament_prefix_path.dsv
 source;share/gps_pub_sub/hook/ament_prefix_path.sh
-source;../../build/gps_pub_sub/share/gps_pub_sub/hook/pythonpath_develop.ps1
-source;../../build/gps_pub_sub/share/gps_pub_sub/hook/pythonpath_develop.dsv
-source;../../build/gps_pub_sub/share/gps_pub_sub/hook/pythonpath_develop.sh

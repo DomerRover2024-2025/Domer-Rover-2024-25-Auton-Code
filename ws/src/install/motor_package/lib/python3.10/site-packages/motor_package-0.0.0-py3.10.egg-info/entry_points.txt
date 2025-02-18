@@ -1,3 +1,4 @@
 [console_scripts]
-
+jetsonTalker = motor_package.jetson_talker:main
+joystickTalker = motor_package.joystick_talker:main
 

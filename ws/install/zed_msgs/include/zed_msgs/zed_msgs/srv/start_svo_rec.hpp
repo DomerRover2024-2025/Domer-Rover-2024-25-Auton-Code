@@ -1,1 +1,0 @@
-/home/domerrover/ws/build/zed_msgs/rosidl_generator_cpp/zed_msgs/srv/start_svo_rec.hpp

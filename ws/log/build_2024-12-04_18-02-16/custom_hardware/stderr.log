@@ -1,7 +1,0 @@
-[01m[K/home/domerrover/ws/src/custom_hardware/custom_hardware.cpp:[m[K In member function ‘[01m[Kvirtual hardware_interface::return_type custom_hardware::CustomHardware::write(const rclcpp::Time&, const rclcpp::Duration&)[m[K’:
-[01m[K/home/domerrover/ws/src/custom_hardware/custom_hardware.cpp:183:10:[m[K [01;35m[Kwarning: [m[KISO C++ forbids variable length array ‘[01m[Kret[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wvla-Wvla]8;;[m[K]
-  183 |   double [01;35m[Kret[m[K[hw_commands_.size()];
-      |          [01;35m[K^~~[m[K
-[01m[K/home/domerrover/ws/src/custom_hardware/custom_hardware.cpp:197:10:[m[K [01;35m[Kwarning: [m[Kignoring return value of ‘[01m[Kssize_t write(int, const void*, size_t)[m[K’ declared with attribute ‘[01m[Kwarn_unused_result[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-result-Wunused-result]8;;[m[K]
-  197 |   [01;35m[K::write(SerialPort, ret, 8*hw_commands_.size())[m[K;
-      |   [01;35m[K~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
