@@ -39,8 +39,8 @@ kill_threads = False
 ################
 
 def main():
-    port = "/dev/cu.usbserial-BG00HO5R"
-    #port = "/dev/cu.usbserial-B001VC58"
+    #port = "/dev/cu.usbserial-BG00HO5R"
+    port = "/dev/cu.usbserial-B001VC58"
     #port = "COM3"
     baud = 57600
     timeout = 0.1
@@ -127,50 +127,52 @@ def main():
 def read_from_port(ser: serial.Serial):
     while not kill_threads:
 
-        b_input = ser.read(1)
-        # ID, PURPOSE, NUMBER, SIZE, PAYLOAD, CHECKSUM
-        if len(b_input) == 0:
-            continue
-        #print("Got a message")
-        pot_msg = Message(new=False)
-        b_input += ser.read(1)
-        pot_msg.set_msg_id(struct.unpack(">H", b_input)[0])
-        #print("Got id")
-        b_input = ser.read(1)
-        pot_msg.set_purpose(struct.unpack(">B", b_input)[0])
-        #print("Got purpose")
-        b_input = ser.read(1)
-        pot_msg.number = struct.unpack(">B", b_input)[0]
-        #print("Got number")
-        b_input = ser.read(struct.calcsize(">L"))
-        #print(struct.calcsize(">L"))
-        pot_msg.set_size(b_input)
-        #print("Got size", pot_msg.size_of_payload)
-        payload = b''
-        # print(pot_msg.size_of_payload)
-        while len(payload) < pot_msg.size_of_payload:
-            payload += ser.read(pot_msg.size_of_payload - len(payload))
-            if kill_threads:
-                return
-        # print(len(payload))
-        pot_msg.set_payload(payload)
-        #print("Got payload")
-        checksum = ser.read(1)
-        #print("Got checksum")
+        try:
+            b_id = read_num_bytes(ser, 1)
+            # ID, PURPOSE, NUMBER, SIZE, PAYLOAD, CHECKSUM
+            if len(b_id) == 0:
+                continue
+            #print("Got a message")
+            pot_msg = Message(new=False)
+            b_id += read_num_bytes(ser, 1)
+            pot_msg.set_msg_id(struct.unpack(">H", b_id)[0])
+            #print("Got id")
+            b_purpose = read_num_bytes(ser, 1)
+            pot_msg.set_purpose(struct.unpack(">B", b_purpose)[0])
+            #print("Got purpose")
+            b_number = read_num_bytes(ser, 1)
+            pot_msg.number = struct.unpack(">B", b_number)[0]
+            #print("Got number")
+            b_size = read_num_bytes(ser, struct.calcsize(">L"))
+            #print(struct.calcsize(">L"))
+            pot_msg.set_size(b_size)
+            print(f"{b_id}{b_purpose}{b_number}{b_size}")
+            print("Got size", pot_msg.size_of_payload)
 
-        #print(checksum)
-        if not Message.test_checksum(bytestring=pot_msg.get_as_bytes()[:-1], checksum=checksum):
-            print("Checksum error")
-            continue
-        messages_from_rover.append(pot_msg)
-        print(f"Message added {pot_msg}; len = {len(messages_from_rover)}")
+            # print(pot_msg.size_of_payload)
+            payload = read_num_bytes(ser, pot_msg.size_of_payload)
+            # print(len(payload))
+            pot_msg.set_payload(payload)
+            #print("Got payload")
+            checksum = read_num_bytes(ser, 1)
+            #print("Got checksum")
+
+            #print(checksum)
+            if not Message.test_checksum(bytestring=pot_msg.get_as_bytes()[:-1], checksum=checksum):
+                print("Checksum error")
+                continue
+            messages_from_rover.append(pot_msg)
+            print(f"Message added {pot_msg}; len = {len(messages_from_rover)}")
+        except Exception as e:
+            print(e)
 
 ##### THE BRAINS FOR DECODING IMPORTED MESSAGES FROM ROVER
 def process_messages() -> None:
     print("thread activated :)")
 
-    video_feed_str = b''
-    video_feed_dict = {}
+    vid_feed_str = b''
+    vid_feed_num = 0
+    vid_feed_dict = {}
 
     hdp_str = b''
     hdp_num = 0
@@ -195,43 +197,81 @@ def process_messages() -> None:
         if curr_msg.purpose == 2: # indicates "HEARTBEAT / position"
             pass
 
-        if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
-            # curr_msg.number: number of 'packets' needed to reconstruct the image
-            if curr_msg.number != 0:
-                video_feed_dict[curr_msg.number] = curr_msg.get_payload()
+        # if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
+        #     # curr_msg.number: number of 'packets' needed to reconstruct the image
+        #     if curr_msg.number != 0:
+        #         video_feed_dict[curr_msg.number] = curr_msg.get_payload()
 
+        #     else:
+        #         for i in range(1, len(video_feed_dict) + 1):
+        #             if i not in video_feed_dict:
+        #                 video_feed_dict = {}
+        #                 video_feed_str = b''
+        #                 print("some error occurred in getting the video feed")
+        #             video_feed_str += video_feed_dict[i]
+
+        #         video_feed_str += curr_msg.get_payload()
+        #         try:
+        #             save_and_output_image(video_feed_str, "vid_feed")
+        #         except Exception as e:
+        #             print(e)
+
+        #         video_feed_dict = {}
+        #         video_feed_str = b''
+
+        # if curr_msg.purpose == 4: # indicates 'VIDEO FEED'
+        #     # curr_msg.number: number of 'packets' needed to reconstruct the image
+        #     if curr_msg.number != 0:
+        #         hdp_dict[curr_msg.number] = curr_msg.get_payload()
+
+        #     else:
+        #         for i in range(1, len(hdp_dict) + 1):
+        #             if i not in video_feed_dict:
+        #                 hdp_dict = {}
+        #                 hdp_str = b''
+        #                 print("some error occurred in getting the high definition photo")
+        #             hdp_str += hdp_dict[i]
+                    
+        #         hdp_str += curr_msg.get_payload()
+        #         try:
+        #             save_and_output_image(video_feed_str, "vid_feed")
+        #         except Exception as e:
+        #             print(e)
+
+                # video_feed_dict = {}
+                # video_feed_str = b''
+        
+        if curr_msg.purpose == 3: # indicates "VIDEO FEED"
+            if vid_feed_num < curr_msg.number:
+                print("found msg")
+                vid_feed_str += curr_msg.get_payload()
+                vid_feed_num += 1
             else:
-                for i in range(1, len(video_feed_dict) + 1):
-                    video_feed_str += video_feed_dict[i]
-
-                video_feed_str += curr_msg.get_payload()
+                print("went here instead")
+                vid_feed_num = 0
+                vid_feed_str += curr_msg.get_payload()
                 try:
-                    save_and_output_image(video_feed_str, "vid_feed")
+                    save_and_output_image(vid_feed_str, "vid_feed")
                 except Exception as e:
                     print(e)
-
-                video_feed_dict = {}
-                video_feed_str = b''
-
-        if curr_msg.purpose == 4: # indicates 'VIDEO FEED'
-            # curr_msg.number: number of 'packets' needed to reconstruct the image
-            if curr_msg.number != 0:
-                hdp_dict[curr_msg.number] = curr_msg.get_payload()
-
+                hdp_str = b''
+        
+        if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
+            if hdp_num < curr_msg.number:
+                print("found msg")
+                hdp_str += curr_msg.get_payload()
+                hdp_num += 1
             else:
-                for i in range(1, len(hdp_dict) + 1):
-                    hdp_str += hdp_dict[i]
-                    
+                print("went here instead")
+                hdp_num = 0
                 hdp_str += curr_msg.get_payload()
                 try:
-                    save_and_output_image(video_feed_str, "vid_feed")
+                    save_and_output_image(hdp_str, "hdp")
                 except Exception as e:
                     print(e)
-
-                video_feed_dict = {}
-                video_feed_str = b''
+                hdp_str = b''
         
-        if curr_msg.purpose == 6: # indicates "HIGH DEFINITION PHOTO"
+        if curr_msg.purpose == 6: # indicates "LOW DEFINITION PHOTO"
             if ldp_num < curr_msg.number:
                 print("found msg")
                 ldp_str += curr_msg.get_payload()
@@ -275,6 +315,15 @@ def exit_main(executor : concurrent.futures.ThreadPoolExecutor):
     global kill_threads
     kill_threads = True
     executor.shutdown(wait=False, cancel_futures=True)
+
+def read_num_bytes(ser: serial.Serial, numbytes : int):
+    read_bytes = b''
+    while len(read_bytes) < numbytes:
+        if kill_threads:
+            return
+        read_bytes += ser.read(numbytes - len(read_bytes))
+
+    return read_bytes
 
 def print_options() -> None:
     print("----------------")
