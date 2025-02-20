@@ -109,6 +109,10 @@ def main():
                         break
                     msg = Message(purpose=0, payload=hello.encode())
                     ser.write(msg.get_as_bytes())
+
+            elif request == "vid":
+                msg = Message(new=True, purpose=3, payload=bytes(1))
+                ser.write(msg.get_as_bytes())
             
             elif request == "hdp":
                 msg = Message(new=True, purpose=4, payload=bytes(1))
@@ -333,6 +337,7 @@ def print_options() -> None:
     print("----------------")
     print("(quit) to quit THIS SIDE ONLY")
     print("(log) get most recent 10 msgs of the log")
+    print('(vid) to turn on/off video feed')
     print("(ldp) for LD photo")
     print("(hdp) for HD photo")
 
