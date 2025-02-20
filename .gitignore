@@ -4,7 +4,9 @@
 .dm_env
 __pycache__/
 *.pyc
-ws/
+ws/install
+ws/build
+ws/log
 log/
 build/
 install/
