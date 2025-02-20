@@ -39,8 +39,8 @@ kill_threads = False
 ################
 
 def main():
-    #port = "/dev/cu.usbserial-BG00HO5R"
-    port = "/dev/cu.usbserial-B001VC58"
+    port = "/dev/cu.usbserial-BG00HO5R"
+    #port = "/dev/cu.usbserial-B001VC58"
     #port = "COM3"
     baud = 57600
     timeout = 0.1
@@ -307,6 +307,7 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
         cv2.waitKey(0)
         return True
     except Exception as e:
+        print("exception happened at line 311")
         print(e)
         return False
 
