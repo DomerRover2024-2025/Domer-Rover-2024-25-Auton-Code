@@ -49,7 +49,7 @@ def main():
     scheduler.ser = ser
     scheduler.set_topics(topics=topics)
 
-    executor = concurrent.futures.ThreadPoolExecutor(3)
+    executor = concurrent.futures.ThreadPoolExecutor(4)
     future_scheduler = executor.submit(send_messages_via_scheduler)
     future_msg_process = executor.submit(process_messages)
     future_video = executor.submit(capture_video)
@@ -126,13 +126,18 @@ def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearra
     #size_packed = struct.pack(">L", size_of_data)
     return size_of_data, buffer
 
-capture_video = False
+capture_video_eh = False
 def capture_video() -> None:
-    while kill_threads and capture_video:
-        _, frame = capture_image(30, 200)
-        if buffer is None:
-            continue
-        scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame, purpose_for_all=3))
+    while not kill_threads:
+        try:
+            if not capture_video_eh:
+                continue
+            _, frame = capture_image(30, 200)
+            if frame is None:
+                continue
+            scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame, purpose_for_all=3))
+        except Exception as e:
+            print(e)
 
 def process_messages() -> None:
 
@@ -166,8 +171,9 @@ def process_messages() -> None:
             #arduino.write(f"{lspeed} {rspeed}\n".encode())
 
         #!TODO ACTUALLY PICK CAMERA TO SEE
-        elif curr_msg.purpose == 2: # indicates START/STOP VIDEO FEED
-            capture_video = not capture_video    
+        elif curr_msg.purpose == 3: # indicates START/STOP VIDEO FEED
+            global capture_video_eh
+            capture_video_eh = not capture_video_eh
         
         elif curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
             length, buffer = capture_image(90)
