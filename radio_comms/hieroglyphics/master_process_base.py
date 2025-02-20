@@ -304,7 +304,7 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
         print("saved image")
         cv2.imshow(f'{type}', frame)
         print('showed image')
-        cv2.waitKey(1)
+        cv2.waitKey(0)
         return True
     except Exception as e:
         print(e)
