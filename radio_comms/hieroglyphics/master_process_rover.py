@@ -52,6 +52,7 @@ def main():
     executor = concurrent.futures.ThreadPoolExecutor(3)
     future_scheduler = executor.submit(send_messages_via_scheduler)
     future_msg_process = executor.submit(process_messages)
+    future_video = executor.submit(capture_video)
 
     atexit.register(exit_handler, executor)
     print("entering while loop")
@@ -125,6 +126,14 @@ def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearra
     #size_packed = struct.pack(">L", size_of_data)
     return size_of_data, buffer
 
+capture_video = False
+def capture_video() -> None:
+    while kill_threads and capture_video:
+        _, frame = capture_image(30, 200)
+        if buffer is None:
+            continue
+        scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame, purpose_for_all=3))
+
 def process_messages() -> None:
 
     print("thread activated :)")
@@ -155,8 +164,12 @@ def process_messages() -> None:
             button_y = struct.unpack(">B", payload[11:12])[0]
             # TODO TODO TODO TODO FIX THIS WHEN CONNECTED TO THE JETSON
             #arduino.write(f"{lspeed} {rspeed}\n".encode())
+
+        #!TODO ACTUALLY PICK CAMERA TO SEE
+        elif curr_msg.purpose == 2: # indicates START/STOP VIDEO FEED
+            capture_video = not capture_video    
         
-        if curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
+        elif curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
             length, buffer = capture_image(90)
             print("Image captured")
             if buffer is None:
@@ -170,7 +183,7 @@ def process_messages() -> None:
                 scheduler.add_list_of_messages("hdp", msgs)
                 print("Message added of length ", len(buffer.tobytes()))
         
-        if curr_msg.purpose == 6: # indicates TAKE ME A BAD PHOTO
+        elif curr_msg.purpose == 6: # indicates TAKE ME A BAD PHOTO
             try:
                 length, buffer = capture_image(90, resize_width=VID_WIDTH)
             except Exception as e:
@@ -187,7 +200,7 @@ def process_messages() -> None:
                     print(e)
 
             #arduino_ser.write(msg.encode())
-        if curr_msg.purpose == 0: # indicates DEBUGGING to the rover
+        elif curr_msg.purpose == 0: # indicates DEBUGGING to the rover
             print("debugging message")
             payload = curr_msg.get_payload()
             print(payload.decode())

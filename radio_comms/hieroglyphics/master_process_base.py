@@ -42,6 +42,7 @@ def main():
     port = "/dev/cu.usbserial-BG00HO5R"
     #port = "/dev/cu.usbserial-B001VC58"
     #port = "COM3"
+    port = "/dev/ttyUSB0"
     baud = 57600
     timeout = 0.1
     ser = serial.Serial(port=port, baudrate=baud, timeout=timeout)
@@ -194,7 +195,7 @@ def process_messages() -> None:
             with open(ERR_LOG,  'a') as f:
                 f.write(error_msg + '\n')
 
-        if curr_msg.purpose == 2: # indicates "HEARTBEAT / position"
+        elif curr_msg.purpose == 2: # indicates "HEARTBEAT / position"
             pass
 
         # if curr_msg.purpose == 3: # indicates 'VIDEO FEED'
@@ -241,7 +242,7 @@ def process_messages() -> None:
                 # video_feed_dict = {}
                 # video_feed_str = b''
         
-        if curr_msg.purpose == 3: # indicates "VIDEO FEED"
+        elif curr_msg.purpose == 3: # indicates "VIDEO FEED"
             if vid_feed_num < curr_msg.number:
                 print("found msg")
                 vid_feed_str += curr_msg.get_payload()
@@ -256,7 +257,7 @@ def process_messages() -> None:
                     print(e)
                 hdp_str = b''
         
-        if curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
+        elif curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
             if hdp_num < curr_msg.number:
                 print("found msg")
                 hdp_str += curr_msg.get_payload()
@@ -271,7 +272,7 @@ def process_messages() -> None:
                     print(e)
                 hdp_str = b''
         
-        if curr_msg.purpose == 6: # indicates "LOW DEFINITION PHOTO"
+        elif curr_msg.purpose == 6: # indicates "LOW DEFINITION PHOTO"
             if ldp_num < curr_msg.number:
                 print("found msg")
                 ldp_str += curr_msg.get_payload()
