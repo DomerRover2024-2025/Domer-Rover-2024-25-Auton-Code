@@ -3,7 +3,7 @@ import zmq
 import time
 
 ###### CONSTANTS ######
-HOST = "*"
+HOST = "10.7.183.148"
 PORT = 12345
 QUALITY = 80
 TIME_BETWEEN_FRAMES = 0.05
@@ -29,6 +29,7 @@ while True:
             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), QUALITY]
             encoded, buffer = cv2.imencode('.jpg', frame, encode_param)
             socket.send(f'{i}/'.encode() + buffer.tobytes())
+            #socket.send(b'adsfasdfasdf')
         time.sleep(TIME_BETWEEN_FRAMES)
 for cap in caps:
     cap.release()
