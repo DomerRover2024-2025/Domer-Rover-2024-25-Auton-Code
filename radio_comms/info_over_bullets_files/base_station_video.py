@@ -3,9 +3,9 @@ import cv2
 import numpy as np
 
 ##### CONSTANTS ######
-HOST = "localhost"
+HOST = "10.7.183.148"
 PORT = 12345
-NUM_CAMS = 1
+NUM_CAMS = 2
 
 sockets = []
 
@@ -17,7 +17,7 @@ for i in range(0, NUM_CAMS):
 
     # connect to the video publish socket
     socket.connect(f"tcp://{HOST}:{PORT}")
-    socket.subscribe(f"{i}/") # subscribe to everything
+    socket.subscribe(f"{i}/") # subscribe to only certain things
     sockets.append(socket)
 
 print("connection established")
@@ -28,6 +28,7 @@ while True:
         message = sockets[i].recv()
         if not message:
             break
+        print("received message")
         # decode the image and show it
         image = np.frombuffer(message[2:], dtype=np.uint8)
         frame = cv2.imdecode(image, 1)
@@ -35,4 +36,5 @@ while True:
         cv2.waitKey(1)
 
 cv2.destroyAllWindows()
-socket.close()
+for socket in sockets:
+    socket.close()
