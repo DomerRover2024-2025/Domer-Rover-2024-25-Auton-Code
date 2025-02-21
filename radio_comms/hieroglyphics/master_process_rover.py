@@ -55,40 +55,47 @@ def main():
     future_video = executor.submit(capture_video)
 
     atexit.register(exit_handler, executor)
-    print("entering while loop")
+    print("entering read loop")
+
+    received_info_from_gnss_eh = False
     
     try:
         while True:
 
             ##### READ: SERIAL PORT #####
             b_input = ser.read(1)
-            if len(b_input) == 0:
-                continue
-            pot_msg = Message(new=False)
-            b_input += ser.read(1)
-            pot_msg.set_msg_id(struct.unpack(">H", b_input)[0])
-            b_input = ser.read(1)
-            pot_msg.set_purpose(b_input)
-            b_input = ser.read(1)
-            pot_msg.number = struct.unpack(">B", b_input)[0]
-            b_input = ser.read(struct.calcsize(">L"))
-            pot_msg.set_size(b_input)
-            payload = b''
+            if len(b_input) != 0:
+                pot_msg = Message(new=False)
+                b_input += ser.read(1)
+                pot_msg.set_msg_id(struct.unpack(">H", b_input)[0])
+                b_input = ser.read(1)
+                pot_msg.set_purpose(b_input)
+                b_input = ser.read(1)
+                pot_msg.number = struct.unpack(">B", b_input)[0]
+                b_input = ser.read(struct.calcsize(">L"))
+                pot_msg.set_size(b_input)
+                payload = b''
 
-            while len(payload) < pot_msg.size_of_payload:
-                payload += ser.read(pot_msg.size_of_payload - len(payload))
-                if kill_threads:
-                    return
+                while len(payload) < pot_msg.size_of_payload:
+                    payload += ser.read(pot_msg.size_of_payload - len(payload))
+                    if kill_threads:
+                        return
 
-            pot_msg.set_payload(payload)
-            checksum = ser.read(1)
-            if not Message.test_checksum(bytestring=pot_msg.get_as_bytes()[:-1], checksum=checksum):
-                print("Checksum error")
-                continue
+                pot_msg.set_payload(payload)
+                checksum = ser.read(1)
+                if not Message.test_checksum(bytestring=pot_msg.get_as_bytes()[:-1], checksum=checksum):
+                    print("Checksum error")
+                    continue
 
-            # TODO replace with a message manager
-            messages_to_process.append(pot_msg)
-            print(f"Message added")
+                # TODO replace with a message manager
+                messages_to_process.append(pot_msg)
+                print(f"Message added")
+
+            if received_info_from_gnss_eh:
+                coord_x = 1.2345
+                coord_y = 9534.1234
+                b_coord_x = struct.pack(">f", coord_x)
+                b_coord_x = struct.pack(">f", coord_y)
 
             # ##### READ: CAMERA #####
             # should_capture_image = False
