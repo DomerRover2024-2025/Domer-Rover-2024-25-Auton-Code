@@ -3,7 +3,7 @@ import zmq
 import time
 
 ###### CONSTANTS ######
-HOST = "10.7.183.148"
+HOST = "*"
 PORT = 12345
 QUALITY = 80
 TIME_BETWEEN_FRAMES = 0.05
@@ -11,7 +11,7 @@ CAM_PATHS = [
     '/dev/v4l/by-id/usb-046d_081b_32750F50-video-index0',
     '/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._USB_Live_camera_SN0001-video-index0'
 ]
-NUM_CAMS = 2
+NUM_CAMS = len(CAM_PATHS)
 # create publish socket and video capture object
 context = zmq.Context()
 socket = context.socket(zmq.PUB)

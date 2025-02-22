@@ -28,7 +28,7 @@ while True:
         message = sockets[i].recv()
         if not message:
             break
-        #print("received message")
+        print("received message")
         # decode the image and show it
         image = np.frombuffer(message[2:], dtype=np.uint8)
         frame = cv2.imdecode(image, 1)

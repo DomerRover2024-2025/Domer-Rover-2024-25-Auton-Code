@@ -25,6 +25,7 @@ kill_threads = False
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
 scheduler = Scheduler(ser=None, topics=None)
+cap = cv2.VideoCapture(CAM_PATH)
 
 def main():
     #port = "/dev/cu.usbserial-BG00HO5R"
@@ -110,7 +111,6 @@ def main():
         exit(0)
 
 def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearray]:
-    cap = cv2.VideoCapture(CAM_PATH)
     #cap = cv2.VideoCapture(0)
     ret, frame = cap.read() # ret is a boolean indicating if the frame was captured correctly
 
@@ -139,7 +139,7 @@ def capture_video() -> None:
         try:
             if not capture_video_eh:
                 continue
-            _, frame = capture_image(30, 200)
+            _, frame = capture_image(30, resize_width=200)
             if frame is None:
                 continue
             scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame, purpose_for_all=3))
