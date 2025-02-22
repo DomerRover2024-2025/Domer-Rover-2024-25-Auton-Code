@@ -142,9 +142,11 @@ def capture_video() -> None:
             _, frame = capture_image(30, resize_width=200)
             if frame is None:
                 continue
-            scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame, purpose_for_all=3))
+            scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame.tobytes(), purpose_for_all=3))
         except Exception as e:
             print(e)
+        finally:
+            time.sleep(1)
 
 def process_messages() -> None:
 
@@ -227,13 +229,15 @@ def send_messages_via_scheduler():
     while not kill_threads:
         for topic in scheduler.topics: # all the topic names
             c = 0 # packet counter
+            if topic == 'vid_feed' and not capture_video_eh:
+                scheduler.messages[topic].clear()
             while scheduler.messages[topic] and c < scheduler.topics[topic]:
                 try:
                     curr_msg = scheduler.messages[topic].popleft()
                     scheduler.ser.write(curr_msg.get_as_bytes())
                     c += 1
                     print(f"{curr_msg.get_as_bytes()[4:8]}")
-                    print(f"Message sent: {curr_msg} of length {curr_msg.size_of_payload}")
+                    #print(f"Message sent: {curr_msg} of length {curr_msg.size_of_payload}")
                 except Exception as e:
                     print(e)
     # talkerNode.destroy_node()
