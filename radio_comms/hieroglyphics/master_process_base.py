@@ -148,10 +148,10 @@ def read_from_port(ser: serial.Serial):
             b_number = read_num_bytes(ser, 1)
             pot_msg.number = struct.unpack(">B", b_number)[0]
             #print("Got number")
-            b_size = read_num_bytes(ser, struct.calcsize(">L"))
+            b_size = read_num_bytes(ser, 4)
             #print(struct.calcsize(">L"))
             pot_msg.set_size(b_size)
-            print(f"{b_id}{b_purpose}{b_number}{b_size}")
+            #print(f"{b_id}{b_purpose}{b_number}{b_size}")
             print("Got size", pot_msg.size_of_payload)
 
             # print(pot_msg.size_of_payload)
@@ -248,26 +248,22 @@ def process_messages() -> None:
         
         elif curr_msg.purpose == 3: # indicates "VIDEO FEED"
             if vid_feed_num < curr_msg.number:
-                print("found msg")
                 vid_feed_str += curr_msg.get_payload()
                 vid_feed_num += 1
             else:
-                print("went here instead")
                 vid_feed_num = 0
                 vid_feed_str += curr_msg.get_payload()
                 try:
                     save_and_output_image(vid_feed_str, "vid_feed")
                 except Exception as e:
                     print(e)
-                hdp_str = b''
+                vid_feed_str = b''
         
         elif curr_msg.purpose == 4: # indicates "HIGH DEFINITION PHOTO"
             if hdp_num < curr_msg.number:
-                print("found msg")
                 hdp_str += curr_msg.get_payload()
                 hdp_num += 1
             else:
-                print("went here instead")
                 hdp_num = 0
                 hdp_str += curr_msg.get_payload()
                 try:
@@ -278,18 +274,16 @@ def process_messages() -> None:
         
         elif curr_msg.purpose == 6: # indicates "LOW DEFINITION PHOTO"
             if ldp_num < curr_msg.number:
-                print("found msg")
                 ldp_str += curr_msg.get_payload()
                 ldp_num += 1
             else:
-                print("went here instead")
                 ldp_num = 0
                 ldp_str += curr_msg.get_payload()
                 try:
                     save_and_output_image(ldp_str, "ldp")
                 except Exception as e:
                     print(e)
-                hdp_str = b''
+                ldp_str = b''
     
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
@@ -299,20 +293,14 @@ def save_and_output_image(buffer : bytearray, type : str) -> bool:
         # (decoded image with ".imdecode", written to a file (".imwrite")
         # and displayed (".imshow"))
         image = np.frombuffer(buffer, dtype=np.uint8)
-        print("unbuffered image, len", len(buffer))
         frame = cv2.imdecode(image, 1)
-        print("decoded image")
         if not os.path.isdir(f"{type}"):
             os.mkdir(f"{type}")
-        print("made directory")
         cv2.imwrite(f"{type}/{time.time()}.jpg", frame)
-        print("saved image")
         cv2.imshow(f'{type}', frame)
-        print('showed image')
         cv2.waitKey(0)
         return True
     except Exception as e:
-        print("exception happened at line 311")
         print(e)
         return False
 
