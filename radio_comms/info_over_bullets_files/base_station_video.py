@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 ##### CONSTANTS ######
-HOST = "10.7.183.148"
+HOST = "192.168.11.17"
 PORT = 12345
 NUM_CAMS = 2
 
@@ -28,7 +28,7 @@ while True:
         message = sockets[i].recv()
         if not message:
             break
-        print("received message")
+        #print("received message")
         # decode the image and show it
         image = np.frombuffer(message[2:], dtype=np.uint8)
         frame = cv2.imdecode(image, 1)
