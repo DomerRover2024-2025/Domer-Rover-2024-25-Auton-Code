@@ -112,10 +112,10 @@ def main():
 
             elif request == "vid":
                 try: 
-                    camera = int(input("Enter camera (1-5): "))
+                    camera = int(input("Enter camera (1-5) (0 to stop): "))
                 except TypeError:
                     print("Must enter an integer.")
-                    camera = int(input("Enter camera (1-5): "))
+                    camera = int(input("Enter camera (1-5) (0 to stop): "))
 
                 b_cam = struct.pack(">B", camera)
                 msg = Message(new=True, purpose=3, payload=b_cam)
