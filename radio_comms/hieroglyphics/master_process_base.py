@@ -111,8 +111,15 @@ def main():
                     ser.write(msg.get_as_bytes())
 
             elif request == "vid":
-                msg = Message(new=True, purpose=3, payload=bytes(1))
-                ser.write(msg.get_as_bytes())
+                try: 
+                    cam_num = int(input("Enter (1-5) for cam 1-5, 0 to stop feed, anything else to return to menu: "))
+                    if not (cam_num <= 5 and cam_num > 0):
+                        print("Returning to menu.")
+                    b_cam = struct.pack(">B", cam_num)
+                    msg = Message(new=True, purpose=3, payload=b_cam)
+                    ser.write(msg.get_as_bytes())
+                except TypeError:
+                    print("Returning to menu.")
             
             elif request == "hdp":
                 msg = Message(new=True, purpose=4, payload=bytes(1))
@@ -284,7 +291,7 @@ def process_messages() -> None:
                 except Exception as e:
                     print(e)
                 ldp_str = b''
-    
+
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:
     try:
