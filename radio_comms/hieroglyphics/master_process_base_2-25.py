@@ -118,7 +118,7 @@ def main():
                     camera = int(input("Enter camera (1-5): "))
 
                 b_cam = struct.pack(">B", camera)
-                msg = Message(new=True, purpose=3, payload=b_cam))
+                msg = Message(new=True, purpose=3, payload=b_cam)
                 ser.write(msg.get_as_bytes())
             
             elif request == "hdp":
