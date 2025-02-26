@@ -1,0 +1,9 @@
+<library path="custom_hardware">
+  <class name="custom_hardware/CustomHardware"
+         type="custom_hardware::CustomHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Generic code for interfacing with arduino as a system interface.
+    </description>
+  </class>
+</library>
