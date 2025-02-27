@@ -86,8 +86,8 @@ def main():
 
                 while True:
                     lspeed, rspeed, scalar, camleft, camright, button_x, button_y = next(gen) # get joystick values
-                    b_lspeed = struct.pack(">h", lspeed)
-                    b_rspeed = struct.pack(">h", rspeed)
+                    b_lspeed = struct.pack(">h", int(lspeed))
+                    b_rspeed = struct.pack(">h", int(rspeed))
                     b_scalar = struct.pack(">f", scalar)
                     b_camleft = struct.pack(">B", camleft)
                     b_camright = struct.pack(">B", camright)

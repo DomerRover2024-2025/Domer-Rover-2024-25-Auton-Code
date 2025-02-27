@@ -16,11 +16,16 @@ from scheduler import Scheduler
 from collections import deque
 from datetime import datetime
 import atexit
+import time
 #np.set_printoptions(threshold=sys.maxsize)
 
 MSG_LOG = "messages_rover.log"
 VID_WIDTH = 200
-CAM_PATH = "/dev/v4l/by-id/usb-046d_081b_32750F50-video-index0"
+CAM_PATHS = [
+    "/dev/v4l/by-id/usb-046d_081b_32750F50-video-index0",
+    "/dev/v4l/by-id/usb-Technologies__Inc._ZED_2i_OV0001-video-index0"
+]
+CAM_PATH = CAM_PATHS[1]
 kill_threads = False
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
@@ -145,8 +150,7 @@ def capture_video() -> None:
             scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame.tobytes(), purpose_for_all=3))
         except Exception as e:
             print(e)
-        finally:
-            time.sleep(1)
+        time.sleep(1)
 
 def process_messages() -> None:
 
@@ -157,7 +161,7 @@ def process_messages() -> None:
     # talkerNode = TalkerNode()
 
     # TODO: TODO TODO FIX THIS when connected to the jetson
-    #arduino = serial.Serial('/dev/ttyACM0')
+    arduino = serial.Serial('/dev/ttyACM0')
 
     while not kill_threads:
         if len(messages_to_process) == 0:
@@ -177,7 +181,7 @@ def process_messages() -> None:
             button_x = struct.unpack(">B", payload[10:11])[0]
             button_y = struct.unpack(">B", payload[11:12])[0]
             # TODO TODO TODO TODO FIX THIS WHEN CONNECTED TO THE JETSON
-            #arduino.write(f"{lspeed} {rspeed}\n".encode())
+            arduino.write(f"{lspeed} {rspeed}\n".encode())
 
         #!TODO ACTUALLY PICK CAMERA TO SEE
         elif curr_msg.purpose == 3: # indicates START/STOP VIDEO FEED
@@ -219,7 +223,7 @@ def process_messages() -> None:
             print("debugging message")
             payload = curr_msg.get_payload()
             print(payload.decode())
-            return_str = "why no work"
+            return_str = f"string {payload.decode()} received."
             scheduler.add_single_message("status", Message(purpose=0, payload=return_str.encode()))
 
 # weighted round robin algorithm?
