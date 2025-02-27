@@ -145,7 +145,7 @@ def capture_video() -> None:
         try:
             if not capture_video_eh:
                 continue
-            _, frame = capture_image(30, resize_width=200)
+            _, frame = capture_image(30, resize_width=250)
             if frame is None:
                 continue
             scheduler.add_list_of_messages("vid_feed", Message.message_split(big_payload=frame.tobytes(), purpose_for_all=3))
@@ -171,7 +171,7 @@ def process_messages() -> None:
         curr_msg : Message = messages_to_process.popleft()
         Message.log_message(curr_msg, MSG_LOG)
         if curr_msg.purpose == 1: # indicates DRIVING
-            print("driving message")
+            #print("driving message")
             payload = curr_msg.get_payload()
             print(len(payload))
             lspeed = struct.unpack(">h", payload[0:2])[0]
@@ -190,17 +190,14 @@ def process_messages() -> None:
             global cap
             cam_num = struct.unpack(">B", curr_msg.payload)[0]
             if cam_num == 0:    # indicates STOP VIDEO FEED, returns camera feed to the photo camera
-                cap = cv2.VideoCapture(CAM_PATH[0])
                 capture_video_eh = False
                 continue
-            if cam_num == 1:
-                cap = cv2.VideoCapture(CAM_PATH[0])
-            elif cam_num == 2:
-                cap = cv2.VideoCapture(CAM_PATH[1])
+            capture_video_eh = True
+            if cam_num <= 2:
+                cap = cv2.VideoCapture(CAM_PATH[cam_num - 1])
             else:
                 print(f"Only two cameras - not activating video for camera {cam_num}")
                 continue
-            capture_video_eh = True
                 
         # elif curr_msg.purpose == 3: # indicates START/STOP VIDEO FEED
         #     global capture_video_eh
@@ -238,7 +235,7 @@ def process_messages() -> None:
 
             #arduino_ser.write(msg.encode())
         elif curr_msg.purpose == 0: # indicates DEBUGGING to the rover
-            print("debugging message")
+            #print("debugging message")
             payload = curr_msg.get_payload()
             print(payload.decode())
             return_str = f"string {payload.decode()} received."
@@ -258,7 +255,7 @@ def send_messages_via_scheduler():
                     curr_msg = scheduler.messages[topic].popleft()
                     scheduler.ser.write(curr_msg.get_as_bytes())
                     c += 1
-                    print(f"{curr_msg.get_as_bytes()[4:8]}")
+                    #print(f"{curr_msg.get_as_bytes()[4:8]}")
                     #print(f"Message sent: {curr_msg} of length {curr_msg.size_of_payload}")
                 except Exception as e:
                     print(e)

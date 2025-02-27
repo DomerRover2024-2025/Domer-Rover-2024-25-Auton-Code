@@ -44,7 +44,7 @@ class Scheduler:
     def add_list_of_messages(self, topic_name, lst_of_msgs : list[message.Message]) -> None:
         if topic_name not in self.messages:
             raise IndexError
-        self.messages[topic_name] += lst_of_msgs
+        self.messages[topic_name].extend(lst_of_msgs)
 
     # print as a string
     def __str__(self) -> str:
