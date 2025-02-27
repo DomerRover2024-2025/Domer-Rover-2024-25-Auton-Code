@@ -30,7 +30,7 @@ def cart2pol(x, y):
 
 def calcWheelSpeeds(magnitude, angle):
     # Ensure magnitude is between 0 and 1
-    magnitude = min(magnitude, 1)
+    magnitude = magnitude/255
 
     # Normalize angle to range [0, 360)
     angle = angle % 360
@@ -56,13 +56,7 @@ def calcWheelSpeeds(magnitude, angle):
     if angle < 30:
         left_speed = left_speed * max(0.3, angle/30)
 
-    return left_speed, right_speed
-
-def sendDriveSignals(left, right):
-    dutyCycleLeft = valueMap(left)
-    dutyCycleRight = valueMap(right)
-            
-    return dutyCycleLeft, dutyCycleRight
+    return valueMap(left_speed), valueMap(right_speed)
 
 def run(joysticks, triggerMult, stopFlag):
 
@@ -91,8 +85,8 @@ def run(joysticks, triggerMult, stopFlag):
         if 0 in joysticks:
             guid = joysticks[0].get_guid()
 
-        a_lt1 = deadzone(joysticks[0].get_axis(4) + 1)
-        a_rt1 = deadzone(joysticks[0].get_axis(5) + 1)
+        a_lt1 = deadzone(joysticks[0].get_axis(5) + 1)
+        a_rt1 = deadzone(joysticks[0].get_axis(4) + 1)
         
         b_lbumper1 = joysticks[0].get_button(9)
         b_rbumper1 = joysticks[0].get_button(10)
@@ -108,8 +102,8 @@ def run(joysticks, triggerMult, stopFlag):
 
         b_x1 = joysticks[0].get_button(0)
         b_circle1 = joysticks[0].get_button(1)
-        b_square1 = joysticks[0].get_button(2)
-        b_triangle1 = joysticks[0].get_button(3)
+        b_square1 = joysticks[0].get_button(3)
+        b_triangle1 = joysticks[0].get_button(2)
 
         b_padUp1 = joysticks[0].get_button(11)
         b_padDown1= joysticks[0].get_button(12)
@@ -119,10 +113,10 @@ def run(joysticks, triggerMult, stopFlag):
         # b_touchpad1 = joysticks[0].get_button(15)
 
         mag, angle = cart2pol(a_leftx1, a_lefty1)
-        angleRads = math.radians(angle)
 
-        triggerMult = triggerMult - a_lt1*0.001 + a_rt1*0.001	#adjust magnitude scalar with triggers (0-2), left decrease, right increase, cancel each other out
-        
+        if a_rt1 > 0.1:
+            triggerMult = round(triggerMult - 0.01, 5)
+
         triggerMult = max(0.1, min(triggerMult, 2))	#limit to 0.1x to 2x for speed scalar
         
         # if b_padUp1 == 1:		# presets - will need sleep() after sending signals w/ time hyperparameter (5secs?)
@@ -134,17 +128,15 @@ def run(joysticks, triggerMult, stopFlag):
         # if b_padRight1 == 1:
         #     pass
         
-        left_power, right_power = calcWheelSpeeds(mag, angle)
-        if b_leftIn1 == 1 and stopFlag == False:
-            stopFlag = True
+        dutyCycleLeft, dutyCycleRight = calcWheelSpeeds(mag, angle)
+        #if b_leftIn1 == 1 and stopFlag == False:
+        #    stopFlag = True
             
-        if stopFlag == True:
-            left_power, right_power = 0, 0
-        
         time.sleep(0.75)
-        dutyCycleLeft, dutyCycleRight = sendDriveSignals(left_power, right_power)
 
-        yield (dutyCycleLeft, dutyCycleRight, triggerMult, b_padUp1, b_padDown1)
+        speedScalar = 0.15
+
+        yield (dutyCycleLeft*speedScalar, dutyCycleRight*speedScalar, triggerMult, b_x1, b_circle1, b_triangle1, b_square1)
 
         # ************************
         # for 6 wheel individual inputs, add indiv wheel speed variables to publisher, use testController3 arduino code
