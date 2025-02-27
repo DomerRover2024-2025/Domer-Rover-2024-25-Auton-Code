@@ -30,7 +30,8 @@ kill_threads = False
 # !TODO to be replaced by a message manager
 messages_to_process = deque()
 scheduler = Scheduler(ser=None, topics=None)
-cap = cv2.VideoCapture(CAM_PATH)
+cap = cv2.VideoCapture(CAM_PATH[0])
+capture_video_eh = False
 
 def main():
     #port = "/dev/cu.usbserial-BG00HO5R"
@@ -138,7 +139,7 @@ def capture_image(quality : int, resize_width : int=None) -> tuple[int, bytearra
     #size_packed = struct.pack(">L", size_of_data)
     return size_of_data, buffer
 
-capture_video_eh = False
+# capture_video_eh = False
 def capture_video() -> None:
     while not kill_threads:
         try:
@@ -184,9 +185,26 @@ def process_messages() -> None:
             arduino.write(f"{lspeed} {rspeed}\n".encode())
 
         #!TODO ACTUALLY PICK CAMERA TO SEE
-        elif curr_msg.purpose == 3: # indicates START/STOP VIDEO FEED
+        if curr_msg.pupose == 3: # indicates video
             global capture_video_eh
-            capture_video_eh = not capture_video_eh
+            global cap
+            cam_num = struct.unpack(">B", curr_msg.payload)[0]
+            if cam_num == 0:    # indicates STOP VIDEO FEED, returns camera feed to the photo camera
+                cap = cv2.VideoCapture(CAM_PATH[0])
+                capture_video_eh = False
+                continue
+            if cam_num == 1:
+                cap = cv2.VideoCapture(CAM_PATH[0])
+            elif cam_num == 2:
+                cap = cv2.VideoCapture(CAM_PATH[1])
+            else:
+                print(f"Only two cameras - not activating video for camera {cam_num}")
+                continue
+            capture_video_eh = True
+                
+        # elif curr_msg.purpose == 3: # indicates START/STOP VIDEO FEED
+        #     global capture_video_eh
+        #     capture_video_eh = not capture_video_eh
         
         elif curr_msg.purpose == 4: # indicates TAKE ME A GOOD PHOTO
             length, buffer = capture_image(90)
