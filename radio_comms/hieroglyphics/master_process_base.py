@@ -24,6 +24,7 @@ import subprocess
 import concurrent.futures
 from datetime import datetime
 import atexit
+import csv
 
 #######################
 ##### GLOBAL VARS #####
@@ -291,6 +292,21 @@ def process_messages() -> None:
                 except Exception as e:
                     print(e)
                 ldp_str = b''
+        
+        elif curr_msg.purpose == 8:
+            payload = curr_msg.get_payload().decode()
+
+            i=0
+            while payload[i] != ":":
+                i += 1
+            
+            file = payload[0:i]
+
+            row = payload[i+1:-1]
+
+            with open(file, 'a', newline='') as csvfile:
+                writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(row)
 
 
 def save_and_output_image(buffer : bytearray, type : str) -> bool:

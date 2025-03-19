@@ -17,6 +17,7 @@ from collections import deque
 from datetime import datetime
 import atexit
 import time
+import csv
 #np.set_printoptions(threshold=sys.maxsize)
 
 MSG_LOG = "messages_rover.log"
@@ -240,6 +241,12 @@ def process_messages() -> None:
             print(payload.decode())
             return_str = f"string {payload.decode()} received."
             scheduler.add_single_message("status", Message(purpose=0, payload=return_str.encode()))
+
+def send_csv(file):
+    with open(file, newline='') as csvfile:
+        for row in csvfile:
+            payload = file + ":" + row.rstrip()
+            scheduler.add_single_message("status", Message(purpose=5, payload=payload.encode()))
 
 # weighted round robin algorithm?
 # implement with a thread, I think
